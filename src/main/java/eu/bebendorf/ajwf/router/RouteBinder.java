@@ -51,7 +51,24 @@ public class RouteBinder {
     }
 
     private static String buildPattern(String globalPrefix, String prefix, String path){
-        return globalPrefix + prefix + path; // TODO Catch double slash
+        String pattern = globalPrefix != null ? globalPrefix : "";
+        if(pattern.endsWith("/"))
+            pattern = pattern.substring(0, pattern.length()-1);
+        if(prefix.length() > 0){
+            if(!prefix.startsWith("/"))
+                pattern+="/";
+            pattern += prefix;
+            if(pattern.endsWith("/"))
+                pattern = pattern.substring(0, pattern.length()-1);
+        }
+        if(path.length() > 0){
+            if(!path.startsWith("/"))
+                pattern+="/";
+            pattern += path;
+            if(pattern.endsWith("/"))
+                pattern = pattern.substring(0, pattern.length()-1);
+        }
+        return pattern;
     }
 
     private static <T extends Annotation> List<T> getAnnotations(Class<T> type, Method method){
