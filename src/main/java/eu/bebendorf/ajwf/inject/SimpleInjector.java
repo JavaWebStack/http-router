@@ -27,6 +27,10 @@ public class SimpleInjector implements Injector {
     }
 
     public <T> void setInstance(Class<T> clazz, T instance) {
+        setInstanceUnsafe(clazz, instance);
+    }
+
+    public void setInstanceUnsafe(Class<?> clazz, Object instance){
         instances.put(clazz, instance);
     }
 
