@@ -1,5 +1,6 @@
 package eu.bebendorf.ajwf;
 
+import com.google.gson.JsonElement;
 import eu.bebendorf.ajwf.helper.HttpMethod;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,6 +22,7 @@ public class Exchange {
     private HttpServletRequest request;
     private HttpServletResponse response;
     private Map<String, Object> attributes = new HashMap<>();
+
     public Exchange(WebService service, HttpServletRequest request, HttpServletResponse response){
         this.service = service;
         this.request = request;
@@ -28,6 +30,7 @@ public class Exchange {
         this.path = request.getPathInfo();
         method = HttpMethod.valueOf(request.getMethod());
     }
+
     public <T> T getBody(Class<T> clazz){
         if(body == null)
             body = read();
@@ -54,6 +57,7 @@ public class Exchange {
     public String getContentType(){
         return request.getContentType();
     }
+
     public byte[] read(){
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
@@ -135,5 +139,26 @@ public class Exchange {
         if(!auth.startsWith("Bearer "))
             return null;
         return auth.substring(7);
+    }
+    public <T> T getBodyPath(String path, Class<T> clazz){
+        return service.getGson().fromJson(getBodyPathElement(path), clazz);
+    }
+    public JsonElement getBodyPathElement(String path){
+        return getPathElement(getBody(JsonElement.class), path);
+    }
+    protected static JsonElement getPathElement(JsonElement source, String path){
+        if(source == null || path == null || path.length() == 0)
+            return source;
+        if(!path.contains(".")){
+            if(source.isJsonObject()){
+                return source.getAsJsonObject().get(path);
+            }else if(source.isJsonArray()){
+                return source.getAsJsonArray().get(Integer.parseInt(path));
+            }else{
+                return null;
+            }
+        }
+        String[] spl = path.split("\\.");
+        return getPathElement(getPathElement(source, spl[0]), path.substring(spl[0].length()+1));
     }
 }
