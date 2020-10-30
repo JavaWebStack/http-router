@@ -18,10 +18,10 @@ public class Exchange {
     private final String path;
     private byte[] body = null;
     public Map<String, Object> pathVariables;
-    public Map<String, String> parameters = new HashMap<>();
-    private HttpServletRequest request;
-    private HttpServletResponse response;
-    private Map<String, Object> attributes = new HashMap<>();
+    public final Map<String, String> parameters = new HashMap<>();
+    private final HttpServletRequest request;
+    private final HttpServletResponse response;
+    private final Map<String, Object> attributes = new HashMap<>();
 
     public Exchange(WebService service, HttpServletRequest request, HttpServletResponse response){
         this.service = service;

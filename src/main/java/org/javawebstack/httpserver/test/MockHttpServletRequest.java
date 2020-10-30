@@ -18,6 +18,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
     private final Map<String, String> headers = new HashMap<>();
     private String method = "GET";
     private String pathInfo = "/";
+    private String queryString = "";
 
     public void setContent(byte[] content){
         inputStream = new MockServletInputStream(content);
@@ -36,7 +37,9 @@ public class MockHttpServletRequest implements HttpServletRequest {
     }
 
     public void setPath(String path){
-        this.pathInfo = path;
+        String[] spl = path.split("\\?");
+        this.pathInfo = spl[0];
+        queryString = spl.length > 1 ? spl[1] : "";
     }
     
     public String getAuthType() {
@@ -88,7 +91,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
     }
     
     public String getQueryString() {
-        return null;
+        return queryString;
     }
     
     public String getRemoteUser() {

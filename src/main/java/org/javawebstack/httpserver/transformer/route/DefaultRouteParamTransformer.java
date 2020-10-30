@@ -1,5 +1,7 @@
 package org.javawebstack.httpserver.transformer.route;
 
+import java.util.UUID;
+
 public class DefaultRouteParamTransformer extends RouteParamTransformer {
     public static final RouteParamTransformer INSTANCE = new DefaultRouteParamTransformer();
     private DefaultRouteParamTransformer(){
@@ -16,5 +18,6 @@ public class DefaultRouteParamTransformer extends RouteParamTransformer {
         add("f|float", "\\-?[0-9]+(\\.[0-9]*)?", s -> Float.parseFloat((String) s) );
         add("d|double", "\\-?[0-9]+(\\.[0-9]*)?", s -> Double.parseDouble((String) s) );
         add("b|bool|boolean", "([Tt]rue|[Ff]alse|0|1)", s -> ((String) s).equalsIgnoreCase("true") || s.equals("1"));
+        add("uuid", "[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}", source -> UUID.fromString((String) source));
     }
 }
