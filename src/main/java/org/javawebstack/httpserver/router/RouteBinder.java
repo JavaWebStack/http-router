@@ -4,7 +4,6 @@ import org.javawebstack.httpserver.Exchange;
 import org.javawebstack.httpserver.WebService;
 import org.javawebstack.httpserver.handler.RequestHandler;
 import org.javawebstack.httpserver.helper.HttpMethod;
-import eu.bebendorf.ajwf.router.annotation.*;
 import org.javawebstack.httpserver.router.annotation.*;
 
 import java.lang.annotation.Annotation;
