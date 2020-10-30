@@ -3,6 +3,8 @@ package org.javawebstack.httpserver;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.eclipse.jetty.util.log.Log;
+import org.javawebstack.httpserver.helper.JettyNoLog;
 import org.javawebstack.httpserver.inject.Injector;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.router.RouteBinder;
@@ -26,17 +28,21 @@ import java.util.List;
 
 public class WebService implements RouteParamTransformerProvider {
 
-    private List<Route> routes = new ArrayList<>();
-    private List<RouteParamTransformer> routeParamTransformers = new ArrayList<>();
-    private List<ResponseTransformer> responseTransformers = new ArrayList<>();
+    public static void main(String[] args) {
+        new WebService().start().join();
+    }
+
+    private final List<Route> routes = new ArrayList<>();
+    private final List<RouteParamTransformer> routeParamTransformers = new ArrayList<>();
+    private final List<ResponseTransformer> responseTransformers = new ArrayList<>();
     private RequestHandler notFoundHandler = new DefaultNotFoundHandler();
     private ExceptionHandler exceptionHandler = new ExceptionHandler.DefaultExceptionHandler();
-    private List<RequestHandler> middleware = new ArrayList<>();
-    private List<AfterRequestHandler> after = new ArrayList<>();
+    private final List<RequestHandler> middleware = new ArrayList<>();
+    private final List<AfterRequestHandler> after = new ArrayList<>();
     private Server server;
     private int port = 80;
-    private List<RequestInterceptor> beforeInterceptors = new ArrayList<>();
-    private Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
+    private final List<RequestInterceptor> beforeInterceptors = new ArrayList<>();
+    private Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").disableHtmlEscaping().create();
     private Injector injector = null;
 
     public WebService(){
@@ -141,6 +147,7 @@ public class WebService implements RouteParamTransformerProvider {
     }
 
     public WebService start(){
+        Log.setLog(new JettyNoLog());
         server = new Server(port);
         server.setHandler(new HttpHandler());
         try {
