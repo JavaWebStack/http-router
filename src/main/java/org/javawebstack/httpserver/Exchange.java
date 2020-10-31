@@ -3,6 +3,7 @@ package org.javawebstack.httpserver;
 import com.google.gson.JsonElement;
 import org.javawebstack.httpserver.helper.HttpMethod;
 
+import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
@@ -160,5 +161,11 @@ public class Exchange {
         }
         String[] spl = path.split("\\.");
         return getPathElement(getPathElement(source, spl[0]), path.substring(spl[0].length()+1));
+    }
+    public void enableMultipart(String location){
+        enableMultipart(location, -1L);
+    }
+    public void enableMultipart(String location, long maxFileSize){
+        request.setAttribute("org.eclipse.multipartConfig", new MultipartConfigElement(location, maxFileSize, -1L, 0));
     }
 }
