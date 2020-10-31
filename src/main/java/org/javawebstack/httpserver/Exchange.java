@@ -166,6 +166,6 @@ public class Exchange {
         enableMultipart(location, -1L);
     }
     public void enableMultipart(String location, long maxFileSize){
-        request.setAttribute("org.eclipse.multipartConfig", new MultipartConfigElement(location, maxFileSize, -1L, 0));
+        request.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(location, maxFileSize, -1L, 0));
     }
 }
