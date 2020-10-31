@@ -13,6 +13,7 @@ import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class RouteBinder {
@@ -154,7 +155,7 @@ public class RouteBinder {
                 }
                 if(parameterTypes[i] instanceof Path){
                     Path path = (Path) parameterTypes[i];
-                    args[i] = exchange.pathVariables.get(path.value());
+                    args[i] = exchange.pathVariables.get(path.value().toLowerCase(Locale.ROOT));
                     continue;
                 }
                 if(service.getInjector() != null)

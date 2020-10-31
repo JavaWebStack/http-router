@@ -12,10 +12,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Route {
-    private RouteParamTransformerProvider routeParamTransformerProvider;
-    private HttpMethod method;
-    private Pattern pattern;
-    private Map<String, String> variables = new HashMap<>();
+    private final RouteParamTransformerProvider routeParamTransformerProvider;
+    private final HttpMethod method;
+    private final Pattern pattern;
+    private final Map<String, String> variables = new HashMap<>();
     private List<RequestHandler> handlers;
     public Route(RouteParamTransformerProvider routeParamTransformerProvider, HttpMethod method, String pattern, List<RequestHandler> handlers){
         this(routeParamTransformerProvider, method, pattern, ":", handlers);
@@ -61,7 +61,7 @@ public class Route {
                             variableName = variableName.substring(loc+1);
                         }
                     }
-                    sb.append("(?<"+regexEscape(variableName)+">"+routeParamTransformerProvider.getRouteParamTransformer(type).regex(type)+")");
+                    sb.append("(?<"+regexEscape(variableName.toLowerCase(Locale.ROOT))+">"+routeParamTransformerProvider.getRouteParamTransformer(type).regex(type)+")");
                     variables.put(variableName, type);
                     text = new StringBuilder();
                 }
