@@ -6,7 +6,7 @@
 
     <groupId>org.javawebstack</groupId>
     <artifactId>HTTP-Server</artifactId>
-    <version>1.0</version>
+    <version>1.0-SNAPSHOT</version>
 
     <dependencies>
         <dependency>
@@ -56,31 +56,30 @@
                 <version>2.22.1</version>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.0.0</version>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.0.0-M1</version>
                 <executions>
                     <execution>
-                        <phase>package</phase>
+                        <id>default-deploy</id>
+                        <phase>deploy</phase>
                         <goals>
-                            <goal>shade</goal>
+                            <goal>deploy</goal>
                         </goals>
-                        <configuration>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
         </plugins>
     </build>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>javawebstack-snapshots</id>
+            <url>https://nexus.javawebstack.org/repository/javawebstack-snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>javawebstack-releases</id>
+            <url>https://nexus.javawebstack.org/repository/javawebstack-releases</url>
+        </repository>
+    </distributionManagement>
 
 </project>
