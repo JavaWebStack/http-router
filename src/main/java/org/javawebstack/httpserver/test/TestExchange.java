@@ -2,13 +2,13 @@ package org.javawebstack.httpserver.test;
 
 import com.google.gson.JsonElement;
 import org.javawebstack.httpserver.Exchange;
-import org.javawebstack.httpserver.WebService;
+import org.javawebstack.httpserver.HTTPServer;
 import org.junit.jupiter.api.Assertions;
 
 public class TestExchange extends Exchange {
     private MockHttpServletRequest mockReq;
     private MockHttpServletResponse mockRes;
-    public TestExchange(WebService service, MockHttpServletRequest request, MockHttpServletResponse response) {
+    public TestExchange(HTTPServer service, MockHttpServletRequest request, MockHttpServletResponse response) {
         super(service, request, response);
         this.mockReq = request;
         this.mockRes = response;
@@ -63,11 +63,11 @@ public class TestExchange extends Exchange {
         return this;
     }
     public TestExchange assertJsonPath(String path, Object value){
-        Assertions.assertTrue(checkJson(getPathElement(getService().getGson().fromJson(mockRes.getContentString(), JsonElement.class), path), value));
+        Assertions.assertTrue(checkJson(getPathElement(getServer().getGson().fromJson(mockRes.getContentString(), JsonElement.class), path), value));
         return this;
     }
     public TestExchange assertJsonPath(String path, Object value, String message){
-        Assertions.assertTrue(checkJson(getPathElement(getService().getGson().fromJson(mockRes.getContentString(), JsonElement.class), path), value), message);
+        Assertions.assertTrue(checkJson(getPathElement(getServer().getGson().fromJson(mockRes.getContentString(), JsonElement.class), path), value), message);
         return this;
     }
     public TestExchange assertJson(Object value){
@@ -91,7 +91,7 @@ public class TestExchange extends Exchange {
             return element == null;
         if(element == null)
             return false;
-        JsonElement val = getService().getGson().toJsonTree(value);
+        JsonElement val = getServer().getGson().toJsonTree(value);
         if(val.isJsonNull())
             return element.isJsonNull();
         if(val.isJsonObject()){

@@ -26,10 +26,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class WebService implements RouteParamTransformerProvider {
+public class HTTPServer implements RouteParamTransformerProvider {
 
     public static void main(String[] args) {
-        new WebService().start().join();
+        new HTTPServer().start().join();
     }
 
     private final List<Route> routes = new ArrayList<>();
@@ -45,71 +45,71 @@ public class WebService implements RouteParamTransformerProvider {
     private Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").disableHtmlEscaping().create();
     private Injector injector = null;
 
-    public WebService(){
+    public HTTPServer(){
         routeParamTransformers.add(DefaultRouteParamTransformer.INSTANCE);
     }
 
-    public WebService beforeInterceptor(RequestInterceptor handler){
+    public HTTPServer beforeInterceptor(RequestInterceptor handler){
         beforeInterceptors.add(handler);
         return this;
     }
 
-    public WebService get(String pattern, RequestHandler... handlers){
+    public HTTPServer get(String pattern, RequestHandler... handlers){
         return route(HttpMethod.GET, pattern, handlers);
     }
 
-    public WebService post(String pattern, RequestHandler... handlers){
+    public HTTPServer post(String pattern, RequestHandler... handlers){
         return route(HttpMethod.POST, pattern, handlers);
     }
 
-    public WebService put(String pattern, RequestHandler... handlers){
+    public HTTPServer put(String pattern, RequestHandler... handlers){
         return route(HttpMethod.PUT, pattern, handlers);
     }
 
-    public WebService delete(String pattern, RequestHandler... handlers){
+    public HTTPServer delete(String pattern, RequestHandler... handlers){
         return route(HttpMethod.DELETE, pattern, handlers);
     }
 
-    public WebService route(HttpMethod method, String pattern, RequestHandler... handlers){
+    public HTTPServer route(HttpMethod method, String pattern, RequestHandler... handlers){
         routes.add(new Route(this, method, pattern, Arrays.asList(handlers)));
         return this;
     }
 
-    public WebService notFound(RequestHandler handler){
+    public HTTPServer notFound(RequestHandler handler){
         notFoundHandler = handler;
         return this;
     }
 
-    public WebService middleware(RequestHandler handler){
+    public HTTPServer middleware(RequestHandler handler){
         middleware.add(handler);
         return this;
     }
 
-    public WebService after(AfterRequestHandler handler){
+    public HTTPServer after(AfterRequestHandler handler){
         after.add(handler);
         return this;
     }
 
-    public WebService routeParamTransformer(RouteParamTransformer transformer){
+    public HTTPServer routeParamTransformer(RouteParamTransformer transformer){
         routeParamTransformers.add(transformer);
         return this;
     }
 
-    public WebService responseTransformer(ResponseTransformer transformer){
+    public HTTPServer responseTransformer(ResponseTransformer transformer){
         responseTransformers.add(transformer);
         return this;
     }
 
-    public WebService exceptionHandler(ExceptionHandler handler){
+    public HTTPServer exceptionHandler(ExceptionHandler handler){
         exceptionHandler = handler;
         return this;
     }
 
-    public WebService controller(Class<?> parentClass, Package p){
+    public HTTPServer controller(Class<?> parentClass, Package p){
         return controller("", parentClass, p);
     }
 
-    public WebService controller(String globalPrefix, Class<?> parentClass, Package p){
+    public HTTPServer controller(String globalPrefix, Class<?> parentClass, Package p){
         Reflections reflections = new Reflections(p.getName());
         reflections.getSubTypesOf(parentClass).forEach(c -> {
             try {
@@ -120,33 +120,33 @@ public class WebService implements RouteParamTransformerProvider {
         return this;
     }
 
-    public WebService controller(Object controller){
+    public HTTPServer controller(Object controller){
         return controller("", controller);
     }
 
-    public WebService controller(String globalPrefix, Object controller){
+    public HTTPServer controller(String globalPrefix, Object controller){
         if(injector != null)
             injector.inject(controller);
         RouteBinder.bind(this, globalPrefix, controller);
         return this;
     }
 
-    public WebService injector(Injector injector){
+    public HTTPServer injector(Injector injector){
         this.injector = injector;
         return this;
     }
 
-    public WebService gson(Gson gson){
+    public HTTPServer gson(Gson gson){
         this.gson = gson;
         return this;
     }
 
-    public WebService port(int port){
+    public HTTPServer port(int port){
         this.port = port;
         return this;
     }
 
-    public WebService start(){
+    public HTTPServer start(){
         Log.setLog(new JettyNoLog());
         server = new Server(port);
         server.setHandler(new HttpHandler());
@@ -242,7 +242,7 @@ public class WebService implements RouteParamTransformerProvider {
 
     private class HttpHandler extends AbstractHandler {
         public void handle(String s, Request request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-            execute(new Exchange(WebService.this, httpServletRequest, httpServletResponse));
+            execute(new Exchange(HTTPServer.this, httpServletRequest, httpServletResponse));
         }
     }
 

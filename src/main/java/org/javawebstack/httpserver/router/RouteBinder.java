@@ -1,7 +1,7 @@
 package org.javawebstack.httpserver.router;
 
 import org.javawebstack.httpserver.Exchange;
-import org.javawebstack.httpserver.WebService;
+import org.javawebstack.httpserver.HTTPServer;
 import org.javawebstack.httpserver.handler.RequestHandler;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.router.annotation.*;
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 public class RouteBinder {
 
-    public static void bind(WebService service, String globalPrefix, Object controller){
+    public static void bind(HTTPServer service, String globalPrefix, Object controller){
         List<String> prefixes = new ArrayList<>(Arrays.stream(controller.getClass().getDeclaredAnnotationsByType(PathPrefix.class)).map(PathPrefix::value).collect(Collectors.toList()));
         if(prefixes.size() == 0)
             prefixes.add("");
@@ -88,12 +88,12 @@ public class RouteBinder {
 
     private static class BindHandler implements RequestHandler {
 
-        private final WebService service;
+        private final HTTPServer service;
         private final Object controller;
         private final Method method;
         private final Object[] parameterTypes;
 
-        public BindHandler(WebService service, Object controller, Method method){
+        public BindHandler(HTTPServer service, Object controller, Method method){
             this.service = service;
             this.controller = controller;
             this.method = method;

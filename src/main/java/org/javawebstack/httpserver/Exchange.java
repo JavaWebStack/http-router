@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Exchange {
-    private final WebService service;
+    private final HTTPServer server;
     private final HttpMethod method;
     private final String path;
     private byte[] body = null;
@@ -24,8 +24,8 @@ public class Exchange {
     private final HttpServletResponse response;
     private final Map<String, Object> attributes = new HashMap<>();
 
-    public Exchange(WebService service, HttpServletRequest request, HttpServletResponse response){
-        this.service = service;
+    public Exchange(HTTPServer server, HttpServletRequest request, HttpServletResponse response){
+        this.server = server;
         this.request = request;
         this.response = response;
         this.path = request.getPathInfo();
@@ -40,11 +40,11 @@ public class Exchange {
         String body = new String(this.body, StandardCharsets.UTF_8);
         if(clazz == String.class)
             return (T) body;
-        return service.getGson().fromJson(body, clazz);
+        return server.getGson().fromJson(body, clazz);
     }
 
-    public WebService getService() {
-        return service;
+    public HTTPServer getServer() {
+        return server;
     }
 
     public HttpMethod getMethod() {
@@ -142,7 +142,7 @@ public class Exchange {
         return auth.substring(7);
     }
     public <T> T getBodyPath(String path, Class<T> clazz){
-        return service.getGson().fromJson(getBodyPathElement(path), clazz);
+        return server.getGson().fromJson(getBodyPathElement(path), clazz);
     }
     public JsonElement getBodyPathElement(String path){
         return getPathElement(getBody(JsonElement.class), path);

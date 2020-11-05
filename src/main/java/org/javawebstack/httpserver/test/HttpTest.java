@@ -1,6 +1,6 @@
 package org.javawebstack.httpserver.test;
 
-import org.javawebstack.httpserver.WebService;
+import org.javawebstack.httpserver.HTTPServer;
 import org.javawebstack.httpserver.helper.HttpMethod;
 
 import java.util.HashMap;
@@ -8,14 +8,14 @@ import java.util.Map;
 
 public abstract class HttpTest {
 
-    private final WebService service;
+    private final HTTPServer service;
     private final Map<String, String> defaultHeaders = new HashMap<>();
 
-    protected HttpTest(WebService service){
+    protected HttpTest(HTTPServer service){
         this.service = service;
     }
 
-    public WebService getService(){
+    public HTTPServer getService(){
         return service;
     }
 
