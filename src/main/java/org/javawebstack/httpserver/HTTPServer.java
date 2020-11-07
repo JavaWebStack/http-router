@@ -20,7 +20,6 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.javawebstack.httpserver.handler.*;
 import org.javawebstack.httpserver.websocket.InternalWebSocketAdapter;
 import org.javawebstack.httpserver.websocket.InternalWebSocketRequestHandler;
-import org.javawebstack.httpserver.websocket.WebSocket;
 import org.reflections.Reflections;
 
 import javax.servlet.http.HttpServletRequest;
@@ -29,20 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class HTTPServer implements RouteParamTransformerProvider {
-
-    public static void main(String[] args) {
-        new HTTPServer().webSocket("/socket/{test}", new WebSocketHandler() {
-            public void onConnect(WebSocket socket) {
-                System.out.println((String) socket.getExchange().pathVariables.get("test"));
-            }
-            public void onMessage(WebSocket socket, String message) {
-
-            }
-            public void onClose(WebSocket socket, int code, String reason) {
-
-            }
-        }).start().join();
-    }
 
     private final List<Route> routes = new ArrayList<>();
     private final RouteBinder routeBinder = new RouteBinder(this);
