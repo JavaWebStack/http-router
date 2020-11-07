@@ -16,10 +16,7 @@ public class JsonResponseTransformer implements ResponseTransformer {
                             return true;
                         return false;
                     }
-
-                    public boolean shouldSkipClass(Class<?> aClass) {
-                        return false;
-                    }
+                    public boolean shouldSkipClass(Class<?> aClass) { return false;  }
                 })
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create());
     }
