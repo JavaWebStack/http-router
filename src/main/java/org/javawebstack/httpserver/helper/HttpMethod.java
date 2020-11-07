@@ -10,5 +10,6 @@ public enum HttpMethod {
     OPTIONS,
     CONNECT,
     MOVE,
-    TRACE
+    TRACE,
+    WEBSOCKET
 }

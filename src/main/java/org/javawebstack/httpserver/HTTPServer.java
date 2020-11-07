@@ -3,12 +3,7 @@ package org.javawebstack.httpserver;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.util.log.Log;
-import org.eclipse.jetty.websocket.api.Session;
-import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
-import org.eclipse.jetty.websocket.server.WebSocketHandler;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.javawebstack.httpserver.helper.JettyNoLog;
 import org.javawebstack.httpserver.inject.Injector;
@@ -23,6 +18,8 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.javawebstack.httpserver.handler.*;
+import org.javawebstack.httpserver.websocket.InternalWebSocketAdapter;
+import org.javawebstack.httpserver.websocket.InternalWebSocketRequestHandler;
 import org.javawebstack.httpserver.websocket.WebSocket;
 import org.reflections.Reflections;
 
@@ -34,10 +31,21 @@ import java.util.*;
 public class HTTPServer implements RouteParamTransformerProvider {
 
     public static void main(String[] args) {
-        new HTTPServer().start().join();
+        new HTTPServer().webSocket("/socket/{test}", new WebSocketHandler() {
+            public void onConnect(WebSocket socket) {
+                System.out.println((String) socket.getExchange().pathVariables.get("test"));
+            }
+            public void onMessage(WebSocket socket, String message) {
+
+            }
+            public void onClose(WebSocket socket, int code, String reason) {
+
+            }
+        }).start().join();
     }
 
     private final List<Route> routes = new ArrayList<>();
+    private final RouteBinder routeBinder = new RouteBinder(this);
     private final List<RouteParamTransformer> routeParamTransformers = new ArrayList<>();
     private final List<ResponseTransformer> responseTransformers = new ArrayList<>();
     private RequestHandler notFoundHandler = new DefaultNotFoundHandler();
@@ -50,7 +58,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setDateFormat("yyyy-MM-dd HH:mm:ss").disableHtmlEscaping().create();
     private Injector injector = null;
-    private Map<String, Class> webSockets = new HashMap<>();
+    private org.eclipse.jetty.websocket.server.WebSocketHandler webSocketHandler;
 
     public HTTPServer(){
         routeParamTransformers.add(DefaultRouteParamTransformer.INSTANCE);
@@ -77,29 +85,12 @@ public class HTTPServer implements RouteParamTransformerProvider {
         return route(HttpMethod.DELETE, pattern, handlers);
     }
 
+    public HTTPServer webSocket(String pattern, WebSocketHandler handler){
+        return route(HttpMethod.WEBSOCKET, pattern, new InternalWebSocketRequestHandler(handler));
+    }
+
     public HTTPServer route(HttpMethod method, String pattern, RequestHandler... handlers){
         routes.add(new Route(this, method, pattern, Arrays.asList(handlers)));
-        return this;
-    }
-
-    public HTTPServer webSocket(String path, Class webSocketHandler){
-        webSockets.put(path, webSocketHandler);
-        return this;
-    }
-
-    public HTTPServer webSocket(String path, WebSocket webSocketHandler){
-        webSockets.put(path, new Object(){
-            private Session session;
-
-            @OnWebSocketConnect public void onConnect(Session session){
-                this.session = session;
-                webSocketHandler.getWebSocketConnectionEvent().onConnect(session);
-            }
-
-            @OnWebSocketConnect public void onMessage(String message){
-                webSocketHandler.getWebSocketMessageEvent().onMessage(session, message);
-            }
-        }.getClass());
         return this;
     }
 
@@ -155,7 +146,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
     public HTTPServer controller(String globalPrefix, Object controller){
         if(injector != null)
             injector.inject(controller);
-        RouteBinder.bind(this, globalPrefix, controller);
+        routeBinder.bind(globalPrefix, controller);
         return this;
     }
 
@@ -177,27 +168,16 @@ public class HTTPServer implements RouteParamTransformerProvider {
     public HTTPServer start(){
         Log.setLog(new JettyNoLog());
         server = new Server(port);
-        HandlerCollection handlerCollection = new HandlerCollection();
-
-        handlerCollection.addHandler(new HttpHandler());
-
-        webSockets.forEach((path, webSocketHandler)->{
-            ContextHandler contextHandler = new ContextHandler();
-            contextHandler.setHandler(new WebSocketHandler() {
-                @Override
-                public void configure(WebSocketServletFactory webSocketServletFactory) {
-                    webSocketServletFactory.register(webSocketHandler);
-                }
-            });
-            contextHandler.setContextPath(path);
-            handlerCollection.addHandler(contextHandler);
-        });
-
-
-        server.setHandler(handlerCollection);
-
+        server.setHandler(new HttpHandler());
+        webSocketHandler = new org.eclipse.jetty.websocket.server.WebSocketHandler(){
+            public void configure(WebSocketServletFactory webSocketServletFactory) {
+                webSocketServletFactory.register(InternalWebSocketAdapter.class);
+            }
+        };
+        webSocketHandler.setServer(server);
         try {
             server.start();
+            webSocketHandler.start();
         }catch (Exception ex){
             throw new RuntimeException(ex);
         }
@@ -251,7 +231,8 @@ public class HTTPServer implements RouteParamTransformerProvider {
                         return;
                     }
                 }
-                exchange.close();
+                if(exchange.getMethod() != HttpMethod.WEBSOCKET)
+                    exchange.close();
                 return;
             }
             exchange.write(transformResponse(notFoundHandler.handle(exchange)));
@@ -291,6 +272,10 @@ public class HTTPServer implements RouteParamTransformerProvider {
         public void handle(String s, Request request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
             execute(new Exchange(HTTPServer.this, httpServletRequest, httpServletResponse));
         }
+    }
+
+    public org.eclipse.jetty.websocket.server.WebSocketHandler getInternalWebSocketHandler() {
+        return webSocketHandler;
     }
 
 }

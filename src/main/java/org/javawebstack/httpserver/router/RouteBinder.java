@@ -18,7 +18,13 @@ import java.util.stream.Collectors;
 
 public class RouteBinder {
 
-    public static void bind(HTTPServer service, String globalPrefix, Object controller){
+    private final HTTPServer server;
+
+    public RouteBinder(HTTPServer server){
+        this.server = server;
+    }
+
+    public void bind(String globalPrefix, Object controller){
         List<String> prefixes = new ArrayList<>(Arrays.stream(controller.getClass().getDeclaredAnnotationsByType(PathPrefix.class)).map(PathPrefix::value).collect(Collectors.toList()));
         if(prefixes.size() == 0)
             prefixes.add("");
@@ -41,10 +47,10 @@ public class RouteBinder {
             for(Delete a : getAnnotations(Delete.class, method))
                 binds.add(new Bind(HttpMethod.DELETE, a.value()));
             if(binds.size() > 0){
-                BindHandler handler = new BindHandler(service, controller, method);
+                BindHandler handler = new BindHandler(server, controller, method);
                 for(String prefix : prefixes){
                     for(Bind bind : binds){
-                        service.route(bind.method, buildPattern(globalPrefix, prefix, bind.path), handler);
+                        server.route(bind.method, buildPattern(globalPrefix, prefix, bind.path), handler);
                     }
                 }
             }

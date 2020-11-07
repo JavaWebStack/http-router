@@ -1,6 +1,7 @@
 package org.javawebstack.httpserver;
 
 import com.google.gson.JsonElement;
+import org.eclipse.jetty.server.Request;
 import org.javawebstack.httpserver.helper.HttpMethod;
 
 import javax.servlet.MultipartConfigElement;
@@ -14,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Exchange {
+
     private final HTTPServer server;
     private final HttpMethod method;
     private final String path;
@@ -29,7 +31,7 @@ public class Exchange {
         this.request = request;
         this.response = response;
         this.path = request.getPathInfo();
-        method = HttpMethod.valueOf(request.getMethod());
+        method = "websocket".equalsIgnoreCase(request.getHeader("Upgrade")) ? HttpMethod.WEBSOCKET : HttpMethod.valueOf(request.getMethod());
     }
 
     public <T> T getBody(Class<T> clazz){
@@ -94,12 +96,13 @@ public class Exchange {
         }
         return this;
     }
-    public void close() {
+    public Exchange close() {
         try {
             response.getOutputStream().close();
         } catch (IOException ex){
             throw new RuntimeException(ex);
         }
+        return this;
     }
     public Exchange header(String header, String value){
         if(header.equalsIgnoreCase("content-type")){
