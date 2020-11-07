@@ -26,9 +26,11 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.logging.Logger;
 
 public class HTTPServer implements RouteParamTransformerProvider {
 
+    private Logger logger = Logger.getLogger("HTTP-Server");
     private final List<Route> routes = new ArrayList<>();
     private final RouteBinder routeBinder = new RouteBinder(this);
     private final List<RouteParamTransformer> routeParamTransformers = new ArrayList<>();
@@ -47,6 +49,11 @@ public class HTTPServer implements RouteParamTransformerProvider {
 
     public HTTPServer(){
         routeParamTransformers.add(DefaultRouteParamTransformer.INSTANCE);
+    }
+
+    public HTTPServer logger(Logger logger){
+        this.logger = logger;
+        return this;
     }
 
     public HTTPServer beforeInterceptor(RequestInterceptor handler){
@@ -163,8 +170,9 @@ public class HTTPServer implements RouteParamTransformerProvider {
         try {
             server.start();
             webSocketHandler.start();
+            logger.info("HTTP-Server started on port "+port);
         }catch (Exception ex){
-            throw new RuntimeException(ex);
+            throw new RuntimeException();
         }
         return this;
     }
