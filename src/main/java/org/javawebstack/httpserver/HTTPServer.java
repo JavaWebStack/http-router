@@ -3,7 +3,13 @@ package org.javawebstack.httpserver;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.eclipse.jetty.server.handler.ContextHandler;
+import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.util.log.Log;
+import org.eclipse.jetty.websocket.api.Session;
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
+import org.eclipse.jetty.websocket.server.WebSocketHandler;
+import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.javawebstack.httpserver.helper.JettyNoLog;
 import org.javawebstack.httpserver.inject.Injector;
 import org.javawebstack.httpserver.helper.HttpMethod;
@@ -17,14 +23,13 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.javawebstack.httpserver.handler.*;
+import org.javawebstack.httpserver.websocket.WebSocket;
 import org.reflections.Reflections;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class HTTPServer implements RouteParamTransformerProvider {
 
@@ -44,6 +49,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private final List<RequestInterceptor> beforeInterceptors = new ArrayList<>();
     private Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").disableHtmlEscaping().create();
     private Injector injector = null;
+    private Map<String, Class> webSockets = new HashMap<>();
 
     public HTTPServer(){
         routeParamTransformers.add(DefaultRouteParamTransformer.INSTANCE);
@@ -72,6 +78,27 @@ public class HTTPServer implements RouteParamTransformerProvider {
 
     public HTTPServer route(HttpMethod method, String pattern, RequestHandler... handlers){
         routes.add(new Route(this, method, pattern, Arrays.asList(handlers)));
+        return this;
+    }
+
+    public HTTPServer webSocket(String path, Class webSocketHandler){
+        webSockets.put(path, webSocketHandler);
+        return this;
+    }
+
+    public HTTPServer webSocket(String path, WebSocket webSocketHandler){
+        webSockets.put(path, new Object(){
+            private Session session;
+
+            @OnWebSocketConnect public void onConnect(Session session){
+                this.session = session;
+                webSocketHandler.getWebSocketConnectionEvent().onConnect(session);
+            }
+
+            @OnWebSocketConnect public void onMessage(String message){
+                webSocketHandler.getWebSocketMessageEvent().onMessage(session, message);
+            }
+        }.getClass());
         return this;
     }
 
@@ -149,7 +176,25 @@ public class HTTPServer implements RouteParamTransformerProvider {
     public HTTPServer start(){
         Log.setLog(new JettyNoLog());
         server = new Server(port);
-        server.setHandler(new HttpHandler());
+        HandlerCollection handlerCollection = new HandlerCollection();
+
+        handlerCollection.addHandler(new HttpHandler());
+
+        webSockets.forEach((path, webSocketHandler)->{
+            ContextHandler contextHandler = new ContextHandler();
+            contextHandler.setHandler(new WebSocketHandler() {
+                @Override
+                public void configure(WebSocketServletFactory webSocketServletFactory) {
+                    webSocketServletFactory.register(webSocketHandler);
+                }
+            });
+            contextHandler.setContextPath(path);
+            handlerCollection.addHandler(contextHandler);
+        });
+
+
+        server.setHandler(handlerCollection);
+
         try {
             server.start();
         }catch (Exception ex){
@@ -210,6 +255,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
             }
             exchange.write(transformResponse(notFoundHandler.handle(exchange)));
         }catch(Throwable ex){
+            ex.printStackTrace();
             exchange.write(exceptionHandler.handleBytes(exchange, ex));
         }
         exchange.close();
