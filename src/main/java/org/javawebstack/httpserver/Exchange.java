@@ -74,22 +74,25 @@ public class Exchange {
         }
         return baos.toByteArray();
     }
-    public void write(String data){
+    public Exchange write(String data){
         write(data.getBytes(StandardCharsets.UTF_8));
+        return this;
     }
-    public void write(byte[] bytes){
+    public Exchange write(byte[] bytes){
         try {
             response.getOutputStream().write(bytes);
         }catch (IOException ex){
             throw new RuntimeException(ex);
         }
+        return this;
     }
-    public void write(byte[] bytes, int offset, int length){
+    public Exchange write(byte[] bytes, int offset, int length){
         try {
             response.getOutputStream().write(bytes, offset, length);
         } catch (IOException ex){
             throw new RuntimeException(ex);
         }
+        return this;
     }
     public void close() {
         try {
@@ -98,27 +101,31 @@ public class Exchange {
             throw new RuntimeException(ex);
         }
     }
-    public void header(String header, String value){
+    public Exchange header(String header, String value){
         if(header.equalsIgnoreCase("content-type")){
             response.setContentType(value);
-            return;
+            return this;
         }
         response.setHeader(header, value);
+        return this;
     }
-    public void status(int code){
+    public Exchange status(int code){
         response.setStatus(code);
+        return this;
     }
     public String header(String header){
         return request.getHeader(header);
     }
-    public void redirect(String url){
+    public Exchange redirect(String url){
         response.setStatus(302);
         try {
             response.sendRedirect(url);
         }catch (IOException ex){
             throw new RuntimeException(ex);
         }
+        return this;
     }
+
     public HttpServletRequest rawRequest(){
         return request;
     }
@@ -130,8 +137,9 @@ public class Exchange {
             return null;
         return (T) attributes.get(key);
     }
-    public void attrib(String key, Object value){
+    public Exchange attrib(String key, Object value){
         attributes.put(key, value);
+        return this;
     }
     public String bearerAuth(){
         String auth = header("Authorization");
@@ -162,10 +170,12 @@ public class Exchange {
         String[] spl = path.split("\\.");
         return getPathElement(getPathElement(source, spl[0]), path.substring(spl[0].length()+1));
     }
-    public void enableMultipart(String location){
+    public Exchange enableMultipart(String location){
         enableMultipart(location, -1L);
+        return this;
     }
-    public void enableMultipart(String location, long maxFileSize){
+    public Exchange enableMultipart(String location, long maxFileSize){
         request.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(location, maxFileSize, -1L, 0));
+        return this;
     }
 }
