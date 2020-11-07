@@ -17,6 +17,14 @@ public class TestExchange extends Exchange {
         printResponse();
         return this;
     }
+
+    public MockHttpServletRequest mockRequest() {
+        return mockReq;
+    }
+
+    public MockHttpServletResponse mockResponse(){
+        return mockRes;
+    }
     public TestExchange printResponse(){
         System.out.println("HTTP Response "+mockRes.getStatus());
         System.out.println(mockRes.getContentString());

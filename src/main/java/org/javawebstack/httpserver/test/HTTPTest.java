@@ -6,17 +6,17 @@ import org.javawebstack.httpserver.helper.HttpMethod;
 import java.util.HashMap;
 import java.util.Map;
 
-public abstract class HttpTest {
+public abstract class HTTPTest {
 
-    private final HTTPServer service;
+    private final HTTPServer server;
     private final Map<String, String> defaultHeaders = new HashMap<>();
 
-    protected HttpTest(HTTPServer service){
-        this.service = service;
+    protected HTTPTest(HTTPServer server){
+        this.server = server;
     }
 
-    public HTTPServer getService(){
-        return service;
+    public HTTPServer getServer(){
+        return server;
     }
 
     public void setDefaultHeader(String key, String value){
@@ -59,18 +59,19 @@ public abstract class HttpTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setMethod(method);
         request.setPath(url);
+        defaultHeaders.forEach(request::addHeader);
         if(content != null){
             if(content instanceof String){
                 request.setContent((String) content);
             }else if(content instanceof byte[]){
                 request.setContent((byte[]) content);
             }else{
-                request.setContent(service.getGson().toJson(content));
+                request.setContent(server.getGson().toJson(content));
             }
         }
         MockHttpServletResponse response = new MockHttpServletResponse();
-        TestExchange exchange = new TestExchange(service, request, response);
-        service.execute(exchange);
+        TestExchange exchange = new TestExchange(server, request, response);
+        server.execute(exchange);
         return exchange;
     }
 
