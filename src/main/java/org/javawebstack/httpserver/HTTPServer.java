@@ -47,7 +47,8 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private Server server;
     private int port = 80;
     private final List<RequestInterceptor> beforeInterceptors = new ArrayList<>();
-    private Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).setDateFormat("yyyy-MM-dd HH:mm:ss").disableHtmlEscaping().create();
+    private Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .setDateFormat("yyyy-MM-dd HH:mm:ss").disableHtmlEscaping().create();
     private Injector injector = null;
     private Map<String, Class> webSockets = new HashMap<>();
 
