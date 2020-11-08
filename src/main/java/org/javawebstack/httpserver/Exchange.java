@@ -83,25 +83,19 @@ public class Exchange {
     public Exchange write(byte[] bytes){
         try {
             response.getOutputStream().write(bytes);
-        }catch (IOException ex){
-            throw new RuntimeException(ex);
-        }
+        }catch (IOException ignored){}
         return this;
     }
     public Exchange write(byte[] bytes, int offset, int length){
         try {
             response.getOutputStream().write(bytes, offset, length);
-        } catch (IOException ex){
-            throw new RuntimeException(ex);
-        }
+        } catch (IOException ignored){}
         return this;
     }
     public Exchange close() {
         try {
             response.getOutputStream().close();
-        } catch (IOException ex){
-            throw new RuntimeException(ex);
-        }
+        } catch (IOException ignored){}
         return this;
     }
     public Exchange header(String header, String value){
