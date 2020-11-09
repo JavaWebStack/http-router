@@ -172,7 +172,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
             webSocketHandler.start();
             logger.info("HTTP-Server started on port "+port);
         }catch (Exception ex){
-            throw new RuntimeException();
+            throw new RuntimeException(ex);
         }
         return this;
     }

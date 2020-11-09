@@ -1,7 +1,6 @@
 package org.javawebstack.httpserver;
 
 import com.google.gson.JsonElement;
-import org.eclipse.jetty.server.Request;
 import org.javawebstack.httpserver.helper.HttpMethod;
 
 import javax.servlet.MultipartConfigElement;
