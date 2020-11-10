@@ -56,6 +56,10 @@ public class HTTPServer implements RouteParamTransformerProvider {
         return this;
     }
 
+    public Logger getLogger(){
+        return logger;
+    }
+
     public HTTPServer beforeInterceptor(RequestInterceptor handler){
         beforeInterceptors.add(handler);
         return this;
@@ -230,7 +234,6 @@ public class HTTPServer implements RouteParamTransformerProvider {
             }
             exchange.write(transformResponse(notFoundHandler.handle(exchange)));
         }catch(Throwable ex){
-            ex.printStackTrace();
             exchange.write(exceptionHandler.handleBytes(exchange, ex));
         }
         exchange.close();
