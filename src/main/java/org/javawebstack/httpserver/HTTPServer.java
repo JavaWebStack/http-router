@@ -6,7 +6,6 @@ import com.google.gson.GsonBuilder;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.javawebstack.httpserver.helper.JettyNoLog;
-import org.javawebstack.httpserver.inject.Injector;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.router.RouteBinder;
 import org.javawebstack.httpserver.transformer.route.DefaultRouteParamTransformer;
@@ -20,6 +19,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.javawebstack.httpserver.handler.*;
 import org.javawebstack.httpserver.websocket.InternalWebSocketAdapter;
 import org.javawebstack.httpserver.websocket.InternalWebSocketRequestHandler;
+import org.javawebstack.injector.Injector;
 import org.reflections.Reflections;
 
 import javax.servlet.http.HttpServletRequest;
