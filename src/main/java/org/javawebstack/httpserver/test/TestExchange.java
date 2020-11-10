@@ -1,9 +1,13 @@
 package org.javawebstack.httpserver.test;
 
 import com.google.gson.JsonElement;
+import org.javawebstack.graph.GraphElement;
 import org.javawebstack.httpserver.Exchange;
 import org.javawebstack.httpserver.HTTPServer;
+import org.javawebstack.httpserver.helper.MimeType;
 import org.junit.jupiter.api.Assertions;
+
+import java.util.Collection;
 
 public class TestExchange extends Exchange {
     private MockHttpServletRequest mockReq;
@@ -71,11 +75,11 @@ public class TestExchange extends Exchange {
         return this;
     }
     public TestExchange assertJsonPath(String path, Object value){
-        Assertions.assertTrue(checkJson(getPathElement(getServer().getGson().fromJson(mockRes.getContentString(), JsonElement.class), path), value));
+        Assertions.assertTrue(checkGraph(getPathElement(mockResponseBody(mockRes), path), value));
         return this;
     }
     public TestExchange assertJsonPath(String path, Object value, String message){
-        Assertions.assertTrue(checkJson(getPathElement(getServer().getGson().fromJson(mockRes.getContentString(), JsonElement.class), path), value), message);
+        Assertions.assertTrue(checkGraph(getPathElement(mockResponseBody(mockRes), path), value), message);
         return this;
     }
     public TestExchange assertJson(Object value){
@@ -94,50 +98,63 @@ public class TestExchange extends Exchange {
         Assertions.assertEquals(content, mockRes.getContentString(), message);
         return this;
     }
-    private boolean checkJson(JsonElement element, Object value){
+    private GraphElement mockResponseBody(MockHttpServletResponse response){
+        MimeType type = MimeType.byMimeType(response.getContentType());
+        if(type == null)
+            type = MimeType.JSON;
+        switch (type){
+            default:
+                return GraphElement.fromJson(response.getContentString());
+            case YAML:
+                return GraphElement.fromYaml(response.getContentString(), true);
+            case X_WWW_FORM_URLENCODED:
+                return GraphElement.fromFormData(response.getContentString());
+        }
+    }
+    private boolean checkGraph(GraphElement element, Object value){
         if(value == null)
             return element == null;
         if(element == null)
             return false;
-        JsonElement val = getServer().getGson().toJsonTree(value);
-        if(val.isJsonNull())
-            return element.isJsonNull();
-        if(val.isJsonObject()){
-            if(!element.isJsonObject())
+        GraphElement val = getServer().getGraphMapper().toGraph(value);
+        if(val.isNull())
+            return element.isNull();
+        if(val.isObject()){
+            if(!element.isObject())
                 return false;
-            for(String key : val.getAsJsonObject().keySet()){
-                if(!element.getAsJsonObject().has(key))
+            for(String key : val.object().keys()){
+                if(!element.object().has(key))
                     return false;
-                if(!checkJson(element.getAsJsonObject().get(key), val.getAsJsonObject().get(key)))
-                    return false;
-            }
-            return true;
-        }
-        if(val.isJsonArray()){
-            if(!element.isJsonArray())
-                return false;
-            if(val.getAsJsonArray().size() != element.getAsJsonArray().size())
-                return false;
-            for(int i=0; i<val.getAsJsonArray().size(); i++){
-                if(!checkJson(element.getAsJsonArray().get(i), val.getAsJsonArray().get(i)))
+                if(!checkGraph(element.object().get(key), val.object().get(key)))
                     return false;
             }
             return true;
         }
-        if(val.getAsJsonPrimitive().isString()){
-            if(!element.getAsJsonPrimitive().isString())
+        if(val.isArray()){
+            if(!element.isArray())
                 return false;
-            return val.getAsString().equals(element.getAsString());
+            if(val.array().size() != element.array().size())
+                return false;
+            for(int i=0; i<val.array().size(); i++){
+                if(!checkGraph(element.array().get(i), val.array().get(i)))
+                    return false;
+            }
+            return true;
         }
-        if(val.getAsJsonPrimitive().isNumber()){
-            if(!element.getAsJsonPrimitive().isNumber())
+        if(val.isString()){
+            if(!element.isString())
                 return false;
-            return val.getAsNumber().equals(element.getAsNumber());
+            return val.string().equals(element.string());
         }
-        if(val.getAsJsonPrimitive().isBoolean()){
-            if(!element.getAsJsonPrimitive().isBoolean())
+        if(val.isNumber()){
+            if(!element.isNumber())
                 return false;
-            return val.getAsBoolean() == element.getAsBoolean();
+            return val.number().equals(element.number());
+        }
+        if(val.isBoolean()){
+            if(!element.isBoolean())
+                return false;
+            return val.bool() == element.bool();
         }
         return false;
     }

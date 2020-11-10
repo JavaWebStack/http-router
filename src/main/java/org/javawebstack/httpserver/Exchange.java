@@ -1,7 +1,12 @@
 package org.javawebstack.httpserver;
 
 import com.google.gson.JsonElement;
+import org.javawebstack.graph.GraphElement;
 import org.javawebstack.httpserver.helper.HttpMethod;
+import org.javawebstack.httpserver.helper.MimeType;
+import org.javawebstack.validator.ValidationException;
+import org.javawebstack.validator.ValidationResult;
+import org.javawebstack.validator.Validator;
 
 import javax.servlet.MultipartConfigElement;
 import javax.servlet.http.HttpServletRequest;
@@ -10,6 +15,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +39,7 @@ public class Exchange {
         method = "websocket".equalsIgnoreCase(request.getHeader("Upgrade")) ? HttpMethod.WEBSOCKET : HttpMethod.valueOf(request.getMethod());
     }
 
-    public <T> T getBody(Class<T> clazz){
+    public <T> T body(Class<T> clazz){
         if(body == null)
             body = read();
         if(clazz == byte[].class)
@@ -41,7 +47,27 @@ public class Exchange {
         String body = new String(this.body, StandardCharsets.UTF_8);
         if(clazz == String.class)
             return (T) body;
-        return server.getGson().fromJson(body, clazz);
+        MimeType type = MimeType.byMimeType(getContentType());
+        if(type == null)
+            type = MimeType.JSON;
+        GraphElement request = null;
+        switch (type){
+            case JSON:
+                request = GraphElement.fromJson(body);
+                break;
+            case YAML:
+                request = GraphElement.fromYaml(body, !(clazz.isArray() || Collection.class.isAssignableFrom(clazz)));
+                break;
+            case X_WWW_FORM_URLENCODED:
+                request = GraphElement.fromFormData(body);
+                break;
+        }
+        if(request == null)
+            return null;
+        ValidationResult result = Validator.getValidator(clazz).validate(request);
+        if(!result.isValid())
+            throw new ValidationException(result);
+        return server.getGraphMapper().fromGraph(request, clazz);
     }
 
     public HTTPServer getServer() {
@@ -146,19 +172,19 @@ public class Exchange {
         return auth.substring(7);
     }
     public <T> T getBodyPath(String path, Class<T> clazz){
-        return server.getGson().fromJson(getBodyPathElement(path), clazz);
+        return server.getGraphMapper().fromGraph(getBodyPathElement(path), clazz);
     }
-    public JsonElement getBodyPathElement(String path){
-        return getPathElement(getBody(JsonElement.class), path);
+    public GraphElement getBodyPathElement(String path){
+        return getPathElement(body(GraphElement.class), path);
     }
-    protected static JsonElement getPathElement(JsonElement source, String path){
+    protected static GraphElement getPathElement(GraphElement source, String path){
         if(source == null || path == null || path.length() == 0)
             return source;
         if(!path.contains(".")){
-            if(source.isJsonObject()){
-                return source.getAsJsonObject().get(path);
-            }else if(source.isJsonArray()){
-                return source.getAsJsonArray().get(Integer.parseInt(path));
+            if(source.isObject()){
+                return source.object().get(path);
+            }else if(source.isArray()){
+                return source.array().get(Integer.parseInt(path));
             }else{
                 return null;
             }

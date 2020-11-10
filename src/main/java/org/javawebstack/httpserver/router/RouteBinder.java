@@ -146,7 +146,7 @@ public class RouteBinder {
                     continue;
                 }
                 if(parameterTypes[i] instanceof Body){
-                    args[i] = exchange.getBody(method.getParameterTypes()[i]);
+                    args[i] = exchange.body(method.getParameterTypes()[i]);
                     continue;
                 }
                 if(parameterTypes[i] instanceof Attrib){

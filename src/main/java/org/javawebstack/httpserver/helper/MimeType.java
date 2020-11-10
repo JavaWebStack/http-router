@@ -22,17 +22,21 @@ public enum MimeType {
     MP4("video/mp4", "mp4"),
     MP3("audio/mpeg", "mp3"),
     WAV("audio/wav", "wav"),
-    OGG("audio/ogg", "ogg");
+    OGG("audio/ogg", "ogg"),
+    YAML(new String[]{"text/yaml", "text/x-yaml", "application/yaml", "application/x-yaml"}, "yaml", "yml");
 
-    MimeType(String mime, String... extensions){
-        this.mime = mime;
+    MimeType(String mimeType, String... extensions){
+        this(new String[]{ mimeType }, extensions);
+    }
+
+    MimeType(String[] mimeTypes, String... extensions){
+        this.mimeTypes = Arrays.asList(mimeTypes);
         this.extensions = Arrays.asList(extensions);
     }
 
-
-    final String mime;
+    final List<String> mimeTypes;
     final List<String> extensions;
-    static MimeType byExtension(String extension){
+    public static MimeType byExtension(String extension){
         if(extension.startsWith("."))
             extension = extension.substring(1);
         for(MimeType type : values()){
@@ -42,7 +46,15 @@ public enum MimeType {
         }
         return null;
     }
-    static MimeType byFileName(String fileName){
+    public static MimeType byMimeType(String mimeType){
+        for(MimeType type : values()){
+            if(type.mimeTypes.contains(mimeType)){
+                return type;
+            }
+        }
+        return null;
+    }
+    public static MimeType byFileName(String fileName){
         if(fileName.contains("/")) {
             String[] spl = fileName.split("/");
             fileName = spl[spl.length - 1];

@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.eclipse.jetty.util.log.Log;
 import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
+import org.javawebstack.graph.GraphMapper;
 import org.javawebstack.httpserver.helper.JettyNoLog;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.router.RouteBinder;
@@ -45,6 +46,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private final List<RequestInterceptor> beforeInterceptors = new ArrayList<>();
     private Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setDateFormat("yyyy-MM-dd HH:mm:ss").disableHtmlEscaping().create();
+    private GraphMapper graphMapper = new GraphMapper();
     private Injector injector = null;
     private org.eclipse.jetty.websocket.server.WebSocketHandler webSocketHandler;
 
@@ -55,6 +57,15 @@ public class HTTPServer implements RouteParamTransformerProvider {
     public HTTPServer logger(Logger logger){
         this.logger = logger;
         return this;
+    }
+
+    public HTTPServer graph(GraphMapper graphMapper){
+        this.graphMapper = graphMapper;
+        return this;
+    }
+
+    public GraphMapper getGraphMapper() {
+        return graphMapper;
     }
 
     public Logger getLogger(){
