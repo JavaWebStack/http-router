@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class HTTPServer implements RouteParamTransformerProvider {
@@ -234,7 +235,11 @@ public class HTTPServer implements RouteParamTransformerProvider {
             }
             exchange.write(transformResponse(notFoundHandler.handle(exchange)));
         }catch(Throwable ex){
-            exchange.write(exceptionHandler.handleBytes(exchange, ex));
+            try {
+                exchange.write(exceptionHandler.handleBytes(exchange, ex));
+            }catch (Throwable ex2){
+                logger.log(Level.SEVERE, ex2, () -> "An error occured in the exception handler!");
+            }
         }
         exchange.close();
     }
