@@ -56,9 +56,9 @@ public class Route {
                     int loc = variableName.indexOf(variableDelimiter);
                     if(loc != -1){
                         String t = variableName.substring(0, loc).toLowerCase(Locale.ENGLISH);
+                        variableName = variableName.substring(loc+1);
                         if(routeParamTransformerProvider.getRouteParamTransformer(t) != null){
                             type = t;
-                            variableName = variableName.substring(loc+1);
                         }
                     }
                     sb.append("(?<"+regexEscape(variableName.toLowerCase(Locale.ROOT))+">"+routeParamTransformerProvider.getRouteParamTransformer(type).regex(type)+")");
