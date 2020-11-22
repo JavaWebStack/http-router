@@ -218,7 +218,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
                 }
             }
             for(Route route : routes){
-                exchange.pathVariables = route.match(exchange.getMethod(), exchange.getPath());
+                exchange.pathVariables = route.match(exchange);
                 if(exchange.pathVariables == null)
                     continue;
                 for(RequestHandler handler : middleware){

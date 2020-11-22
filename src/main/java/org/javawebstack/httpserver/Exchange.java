@@ -2,6 +2,7 @@ package org.javawebstack.httpserver;
 
 import com.google.gson.JsonElement;
 import org.javawebstack.graph.GraphElement;
+import org.javawebstack.graph.GraphNull;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.helper.MimeType;
 import org.javawebstack.validator.ValidationException;
@@ -50,7 +51,7 @@ public class Exchange {
         MimeType type = MimeType.byMimeType(getContentType());
         if(type == null)
             type = MimeType.JSON;
-        GraphElement request = null;
+        GraphElement request = GraphNull.INSTANCE;
         switch (type){
             case JSON:
                 request = GraphElement.fromJson(body);
@@ -62,8 +63,6 @@ public class Exchange {
                 request = GraphElement.fromFormData(body);
                 break;
         }
-        if(request == null)
-            return null;
         ValidationResult result = Validator.getValidator(clazz).validate(request);
         if(!result.isValid())
             throw new ValidationException(result);

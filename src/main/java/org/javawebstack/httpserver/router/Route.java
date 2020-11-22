@@ -1,5 +1,6 @@
 package org.javawebstack.httpserver.router;
 
+import org.javawebstack.httpserver.Exchange;
 import org.javawebstack.httpserver.handler.RequestHandler;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.transformer.route.RouteParamTransformerProvider;
@@ -80,14 +81,18 @@ public class Route {
         }
         this.pattern = Pattern.compile(sb.toString());
     }
-    public Map<String, Object> match(HttpMethod method, String path){
+
+    public Map<String, Object> match(Exchange exchange){
+        return match(exchange, exchange.getMethod(), exchange.getPath());
+    }
+    public Map<String, Object> match(Exchange exchange, HttpMethod method, String path){
         if(this.method != method)
             return null;
         Matcher matcher = pattern.matcher(path);
         if(matcher.matches()){
             Map<String, Object> params = new HashMap<>();
             for(String name : variables.keySet()){
-                params.put(name, routeParamTransformerProvider.getRouteParamTransformer(variables.get(name)).transform(variables.get(name), matcher.group(name)));
+                params.put(name, routeParamTransformerProvider.getRouteParamTransformer(variables.get(name)).transform(variables.get(name), exchange, matcher.group(name)));
             }
             return params;
         }
