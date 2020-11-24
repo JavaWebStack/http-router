@@ -4,7 +4,6 @@ import org.javawebstack.httpserver.Exchange;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Function;
 
 public abstract class RouteParamTransformer {
     private final Map<String, String> regex = new HashMap<>();
