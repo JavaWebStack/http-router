@@ -36,6 +36,15 @@ public enum MimeType {
 
     final List<String> mimeTypes;
     final List<String> extensions;
+
+    public List<String> getMimeTypes() {
+        return mimeTypes;
+    }
+
+    public List<String> getExtensions() {
+        return extensions;
+    }
+
     public static MimeType byExtension(String extension){
         if(extension.startsWith("."))
             extension = extension.substring(1);

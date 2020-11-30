@@ -161,6 +161,14 @@ public class Exchange {
         return possible[0];
     }
 
+    public Exchange contentType(MimeType type){
+        return contentType(type.getMimeTypes().get(0));
+    }
+
+    public Exchange contentType(String contentType){
+        return header("Content-Type", contentType);
+    }
+
     public HttpServletRequest rawRequest(){
         return request;
     }
