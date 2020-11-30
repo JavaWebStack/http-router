@@ -16,9 +16,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class Exchange {
 
@@ -137,6 +135,7 @@ public class Exchange {
     public String header(String header){
         return request.getHeader(header);
     }
+
     public Exchange redirect(String url){
         response.setStatus(302);
         try {
@@ -145,6 +144,21 @@ public class Exchange {
             throw new RuntimeException(ex);
         }
         return this;
+    }
+
+    public List<Locale> locales(){
+        return Collections.list(request.getLocales());
+    }
+
+    public Locale locale(Locale... possible){
+        if(possible.length == 0)
+            return request.getLocale();
+        List<Locale> possibleList = Arrays.asList(possible);
+        for(Locale l : locales()){
+            if(possibleList.contains(l))
+                return l;
+        }
+        return possible[0];
     }
 
     public HttpServletRequest rawRequest(){

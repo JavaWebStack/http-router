@@ -259,11 +259,11 @@ public class MockHttpServletRequest implements HttpServletRequest {
     }
     
     public Locale getLocale() {
-        return null;
+        return Locale.ENGLISH;
     }
     
     public Enumeration<Locale> getLocales() {
-        return null;
+        return Collections.enumeration(Collections.singletonList(getLocale()));
     }
     
     public boolean isSecure() {
