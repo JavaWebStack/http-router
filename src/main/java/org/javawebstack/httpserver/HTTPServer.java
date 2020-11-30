@@ -224,6 +224,9 @@ public class HTTPServer implements RouteParamTransformerProvider {
                 for(RequestHandler handler : middleware){
                     Object response = handler.handle(exchange);
                     if(response != null){
+                        for(AfterRequestHandler afterHandler : after){
+                            response = afterHandler.handleAfter(exchange, response);
+                        }
                         exchange.write(transformResponse(response));
                         exchange.close();
                         return;
