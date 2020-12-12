@@ -8,6 +8,8 @@ import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.javawebstack.graph.GraphMapper;
 import org.javawebstack.httpserver.helper.JettyNoLog;
 import org.javawebstack.httpserver.helper.HttpMethod;
+import org.javawebstack.httpserver.router.DefaultRouteAutoInjector;
+import org.javawebstack.httpserver.router.RouteAutoInjector;
 import org.javawebstack.httpserver.router.RouteBinder;
 import org.javawebstack.httpserver.transformer.route.DefaultRouteParamTransformer;
 import org.javawebstack.httpserver.router.Route;
@@ -49,9 +51,11 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private GraphMapper graphMapper = new GraphMapper();
     private Injector injector = null;
     private org.eclipse.jetty.websocket.server.WebSocketHandler webSocketHandler;
+    private List<RouteAutoInjector> routeAutoInjectors = new ArrayList<>();
 
     public HTTPServer(){
         routeParamTransformers.add(DefaultRouteParamTransformer.INSTANCE);
+        routeAutoInjectors.add(DefaultRouteAutoInjector.INSTANCE);
     }
 
     public HTTPServer logger(Logger logger){
@@ -74,6 +78,11 @@ public class HTTPServer implements RouteParamTransformerProvider {
 
     public HTTPServer beforeInterceptor(RequestInterceptor handler){
         beforeInterceptors.add(handler);
+        return this;
+    }
+
+    public HTTPServer routeAutoInjector(RouteAutoInjector injector){
+        routeAutoInjectors.add(injector);
         return this;
     }
 
@@ -264,6 +273,10 @@ public class HTTPServer implements RouteParamTransformerProvider {
 
     public RouteParamTransformer getRouteParamTransformer(String type) {
         return routeParamTransformers.stream().filter(t -> t.canTransform(type)).findFirst().orElse(null);
+    }
+
+    public List<RouteAutoInjector> getRouteAutoInjectors(){
+        return routeAutoInjectors;
     }
 
     public byte[] transformResponse(Object object){

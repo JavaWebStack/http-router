@@ -134,17 +134,8 @@ public class RouteBinder {
         public Object handle(Exchange exchange) {
             Object[] args = new Object[parameterTypes.length];
             for(int i=0; i<args.length; i++){
-                if(parameterTypes[i] == null){
+                if(parameterTypes[i] == null)
                     continue;
-                }
-                if(parameterTypes[i].equals(Exchange.class)){
-                    args[i] = exchange;
-                    continue;
-                }
-                if(parameterTypes[i].equals(HttpMethod.class)){
-                    args[i] = exchange.getMethod();
-                    continue;
-                }
                 if(parameterTypes[i] instanceof Body){
                     args[i] = exchange.body(method.getParameterTypes()[i]);
                     continue;
@@ -164,7 +155,12 @@ public class RouteBinder {
                     args[i] = exchange.pathVariables.get(path.value().toLowerCase(Locale.ROOT));
                     continue;
                 }
-                if(service.getInjector() != null)
+                for(RouteAutoInjector autoInjector : service.getRouteAutoInjectors()){
+                    args[i] = autoInjector.getValue(exchange, (Class<?>) parameterTypes[i]);
+                    if(args[i] != null)
+                        break;
+                }
+                if(args[i] == null && service.getInjector() != null)
                     args[i] = service.getInjector().getInstance((Class<?>) parameterTypes[i]);
             }
             try {
