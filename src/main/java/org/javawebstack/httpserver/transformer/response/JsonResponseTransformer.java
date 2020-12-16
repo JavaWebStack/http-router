@@ -18,6 +18,7 @@ public class JsonResponseTransformer implements ResponseTransformer {
                     }
                     public boolean shouldSkipClass(Class<?> aClass) { return false;  }
                 })
+                .setDateFormat("yyyy-MM-dd HH:mm:ss")
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create());
     }
 
