@@ -102,8 +102,7 @@ public class Route {
         return handlers;
     }
     private static String regexEscape(String s){
-        s = s.replace("\\", "\\\\");
-        for(char c : "<([{^-=\\$!|]})?*+.>".toCharArray()){
+        for(char c : "\\<([{^-=$!|]})?*+.>".toCharArray()){
             s = s.replace(String.valueOf(c), "\\"+c);
         }
         return s;
