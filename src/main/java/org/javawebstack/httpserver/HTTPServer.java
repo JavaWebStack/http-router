@@ -231,7 +231,12 @@ public class HTTPServer implements RouteParamTransformerProvider {
                 if(exchange.pathVariables == null)
                     continue;
                 for(RequestHandler handler : middleware){
-                    Object response = handler.handle(exchange);
+                    Object response;
+                    try {
+                        response = handler.handle(exchange);
+                    }catch (Throwable ex){
+                        response = exceptionHandler.handle(exchange, ex);
+                    }
                     if(response != null){
                         for(AfterRequestHandler afterHandler : after){
                             response = afterHandler.handleAfter(exchange, response);
@@ -259,7 +264,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
             exchange.write(transformResponse(notFoundHandler.handle(exchange)));
         }catch(Throwable ex){
             try {
-                exchange.write(exceptionHandler.handleBytes(exchange, ex));
+                exchange.write(transformResponse(exceptionHandler.handle(exchange, ex)));
             }catch (Throwable ex2){
                 logger.log(Level.SEVERE, ex2, () -> "An error occured in the exception handler!");
             }

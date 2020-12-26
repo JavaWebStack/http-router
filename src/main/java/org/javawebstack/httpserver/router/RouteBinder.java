@@ -166,9 +166,8 @@ public class RouteBinder {
             try {
                 return method.invoke(controller, args);
             } catch (IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e.getCause());
             }
-            return null;
         }
     }
 
