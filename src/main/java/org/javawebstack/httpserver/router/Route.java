@@ -1,14 +1,12 @@
 package org.javawebstack.httpserver.router;
 
 import org.javawebstack.httpserver.Exchange;
+import org.javawebstack.httpserver.handler.AfterRequestHandler;
 import org.javawebstack.httpserver.handler.RequestHandler;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.transformer.route.RouteParamTransformerProvider;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -18,9 +16,12 @@ public class Route {
     private final Pattern pattern;
     private final Map<String, String> variables = new HashMap<>();
     private List<RequestHandler> handlers;
+    private List<AfterRequestHandler> afterHandlers;
+
     public Route(RouteParamTransformerProvider routeParamTransformerProvider, HttpMethod method, String pattern, List<RequestHandler> handlers){
         this(routeParamTransformerProvider, method, pattern, ":", handlers);
     }
+
     public Route(RouteParamTransformerProvider routeParamTransformerProvider, HttpMethod method, String pattern, String variableDelimiter, List<RequestHandler> handlers){
         this.handlers = handlers;
         this.method = method;
@@ -82,9 +83,15 @@ public class Route {
         this.pattern = Pattern.compile(sb.toString());
     }
 
+    public Route setAfterHandlers(List<AfterRequestHandler> afterHandlers){
+        this.afterHandlers = afterHandlers;
+        return this;
+    }
+
     public Map<String, Object> match(Exchange exchange){
         return match(exchange, exchange.getMethod(), exchange.getPath());
     }
+
     public Map<String, Object> match(Exchange exchange, HttpMethod method, String path){
         if(this.method != method)
             return null;
@@ -98,9 +105,15 @@ public class Route {
         }
         return null;
     }
+
     public List<RequestHandler> getHandlers(){
         return handlers;
     }
+
+    public List<AfterRequestHandler> getAfterHandlers() {
+        return afterHandlers;
+    }
+
     private static String regexEscape(String s){
         for(char c : "\\<([{^-=$!|]})?*+.>".toCharArray()){
             s = s.replace(String.valueOf(c), "\\"+c);

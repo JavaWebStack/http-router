@@ -2,6 +2,7 @@ package org.javawebstack.httpserver.router;
 
 import org.javawebstack.httpserver.Exchange;
 import org.javawebstack.httpserver.HTTPServer;
+import org.javawebstack.httpserver.handler.AfterRequestHandler;
 import org.javawebstack.httpserver.handler.RequestHandler;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.router.annotation.*;
@@ -28,6 +29,7 @@ public class RouteBinder {
         List<String> prefixes = new ArrayList<>(Arrays.stream(controller.getClass().getDeclaredAnnotationsByType(PathPrefix.class)).map(PathPrefix::value).collect(Collectors.toList()));
         if(prefixes.size() == 0)
             prefixes.add("");
+        With with = Arrays.stream(controller.getClass().getDeclaredAnnotationsByType(With.class)).findFirst().orElse(null);
         class Bind {
             final HttpMethod method;
             final String path;
@@ -38,14 +40,56 @@ public class RouteBinder {
         }
         for(Method method : controller.getClass().getDeclaredMethods()){
             List<Bind> binds = new ArrayList<>();
-            for(Get a : getAnnotations(Get.class, method))
+            With methodWith = getAnnotations(With.class, method).stream().findFirst().orElse(null);
+            List<String> middlewares = new ArrayList<>();
+            if(with != null)
+                middlewares.addAll(Arrays.asList(with.value()));
+            if(methodWith != null)
+                middlewares.addAll(Arrays.asList(methodWith.value()));
+            for(Get a : getAnnotations(Get.class, method)){
+                for(String name : middlewares){
+                    RequestHandler before = server.getBeforeMiddleware(name);
+                    if(before != null)
+                        server.beforeGet(a.value(), before);
+                    AfterRequestHandler after = server.getAfterMiddleware(name);
+                    if(after != null)
+                        server.afterGet(a.value(), after);
+                }
                 binds.add(new Bind(HttpMethod.GET, a.value()));
-            for(Post a : getAnnotations(Post.class, method))
+            }
+            for(Post a : getAnnotations(Post.class, method)){
+                for(String name : middlewares){
+                    RequestHandler before = server.getBeforeMiddleware(name);
+                    if(before != null)
+                        server.beforePost(a.value(), before);
+                    AfterRequestHandler after = server.getAfterMiddleware(name);
+                    if(after != null)
+                        server.afterPost(a.value(), after);
+                }
                 binds.add(new Bind(HttpMethod.POST, a.value()));
-            for(Put a : getAnnotations(Put.class, method))
+            }
+            for(Put a : getAnnotations(Put.class, method)){
+                for(String name : middlewares){
+                    RequestHandler before = server.getBeforeMiddleware(name);
+                    if(before != null)
+                        server.beforePut(a.value(), before);
+                    AfterRequestHandler after = server.getAfterMiddleware(name);
+                    if(after != null)
+                        server.afterPut(a.value(), after);
+                }
                 binds.add(new Bind(HttpMethod.PUT, a.value()));
-            for(Delete a : getAnnotations(Delete.class, method))
+            }
+            for(Delete a : getAnnotations(Delete.class, method)){
+                for(String name : middlewares){
+                    RequestHandler before = server.getBeforeMiddleware(name);
+                    if(before != null)
+                        server.beforeDelete(a.value(), before);
+                    AfterRequestHandler after = server.getAfterMiddleware(name);
+                    if(after != null)
+                        server.afterDelete(a.value(), after);
+                }
                 binds.add(new Bind(HttpMethod.DELETE, a.value()));
+            }
             if(binds.size() > 0){
                 BindHandler handler = new BindHandler(server, controller, method);
                 for(String prefix : prefixes){

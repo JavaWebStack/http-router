@@ -41,8 +41,8 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private final List<ResponseTransformer> responseTransformers = new ArrayList<>();
     private RequestHandler notFoundHandler = new DefaultNotFoundHandler();
     private ExceptionHandler exceptionHandler = new ExceptionHandler.DefaultExceptionHandler();
-    private final List<RequestHandler> middleware = new ArrayList<>();
-    private final List<AfterRequestHandler> after = new ArrayList<>();
+    private final List<Route> beforeRoutes = new ArrayList<>();
+    private final List<Route> afterRoutes = new ArrayList<>();
     private Server server;
     private int port = 80;
     private final List<RequestInterceptor> beforeInterceptors = new ArrayList<>();
@@ -52,6 +52,8 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private Injector injector = null;
     private org.eclipse.jetty.websocket.server.WebSocketHandler webSocketHandler;
     private List<RouteAutoInjector> routeAutoInjectors = new ArrayList<>();
+    private final Map<String, RequestHandler> beforeMiddleware = new HashMap<>();
+    private final Map<String, AfterRequestHandler> afterMiddleware = new HashMap<>();
 
     public HTTPServer(){
         routeParamTransformers.add(DefaultRouteParamTransformer.INSTANCE);
@@ -90,20 +92,48 @@ public class HTTPServer implements RouteParamTransformerProvider {
         return route(HttpMethod.GET, pattern, handlers);
     }
 
+    public HTTPServer beforeGet(String pattern, RequestHandler... handlers){
+        return beforeRoute(HttpMethod.GET, pattern, handlers);
+    }
+
+    public HTTPServer afterGet(String pattern, AfterRequestHandler... handlers){
+        return afterRoute(HttpMethod.GET, pattern, handlers);
+    }
+
     public HTTPServer post(String pattern, RequestHandler... handlers){
         return route(HttpMethod.POST, pattern, handlers);
+    }
+
+    public HTTPServer beforePost(String pattern, RequestHandler... handlers){
+        return beforeRoute(HttpMethod.POST, pattern, handlers);
+    }
+
+    public HTTPServer afterPost(String pattern, AfterRequestHandler... handlers){
+        return afterRoute(HttpMethod.POST, pattern, handlers);
     }
 
     public HTTPServer put(String pattern, RequestHandler... handlers){
         return route(HttpMethod.PUT, pattern, handlers);
     }
 
+    public HTTPServer beforePut(String pattern, RequestHandler... handlers){
+        return beforeRoute(HttpMethod.PUT, pattern, handlers);
+    }
+
+    public HTTPServer afterPut(String pattern, AfterRequestHandler... handlers){
+        return afterRoute(HttpMethod.PUT, pattern, handlers);
+    }
+
     public HTTPServer delete(String pattern, RequestHandler... handlers){
         return route(HttpMethod.DELETE, pattern, handlers);
     }
 
-    public HTTPServer webSocket(String pattern, WebSocketHandler handler){
-        return route(HttpMethod.WEBSOCKET, pattern, new InternalWebSocketRequestHandler(handler));
+    public HTTPServer beforeDelete(String pattern, RequestHandler... handlers){
+        return beforeRoute(HttpMethod.DELETE, pattern, handlers);
+    }
+
+    public HTTPServer afterDelete(String pattern, AfterRequestHandler... handlers){
+        return afterRoute(HttpMethod.DELETE, pattern, handlers);
     }
 
     public HTTPServer route(HttpMethod method, String pattern, RequestHandler... handlers){
@@ -111,18 +141,62 @@ public class HTTPServer implements RouteParamTransformerProvider {
         return this;
     }
 
+    public HTTPServer beforeRoute(HttpMethod method, String pattern, RequestHandler... handlers){
+        beforeRoutes.add(new Route(this, method, pattern, Arrays.asList(handlers)));
+        return this;
+    }
+
+    public HTTPServer afterRoute(HttpMethod method, String pattern, AfterRequestHandler... handlers){
+        afterRoutes.add(new Route(this, method, pattern, null).setAfterHandlers(Arrays.asList(handlers)));
+        return this;
+    }
+
+    public HTTPServer route(HttpMethod[] methods, String pattern, RequestHandler... handlers){
+        for(HttpMethod method : methods)
+            route(method, pattern, handlers);
+        return this;
+    }
+
+    public HTTPServer beforeRoute(HttpMethod[] methods, String pattern, RequestHandler... handlers){
+        for(HttpMethod method : methods)
+            beforeRoute(method, pattern, handlers);
+        return this;
+    }
+
+    public HTTPServer afterRoute(HttpMethod[] methods, String pattern, AfterRequestHandler... handlers){
+        for(HttpMethod method : methods)
+            afterRoute(method, pattern, handlers);
+        return this;
+    }
+
+    public HTTPServer any(String pattern, RequestHandler... handlers){
+        return route(HttpMethod.values(), pattern, handlers);
+    }
+
+    public HTTPServer beforeAny(String pattern, RequestHandler... handlers){
+        return beforeRoute(HttpMethod.values(), pattern, handlers);
+    }
+
+    public HTTPServer afterAny(String pattern, AfterRequestHandler... handlers){
+        return afterRoute(HttpMethod.values(), pattern, handlers);
+    }
+
+    public HTTPServer webSocket(String pattern, WebSocketHandler handler){
+        return route(HttpMethod.WEBSOCKET, pattern, new InternalWebSocketRequestHandler(handler));
+    }
+
+    public HTTPServer middleware(String name, RequestHandler handler){
+        beforeMiddleware.put(name, handler);
+        return this;
+    }
+
+    public HTTPServer middleware(String name, AfterRequestHandler handler){
+        afterMiddleware.put(name, handler);
+        return this;
+    }
+
     public HTTPServer notFound(RequestHandler handler){
         notFoundHandler = handler;
-        return this;
-    }
-
-    public HTTPServer middleware(RequestHandler handler){
-        middleware.add(handler);
-        return this;
-    }
-
-    public HTTPServer after(AfterRequestHandler handler){
-        after.add(handler);
         return this;
     }
 
@@ -226,11 +300,11 @@ public class HTTPServer implements RouteParamTransformerProvider {
                     return;
                 }
             }
-            for(Route route : routes){
+            for(Route route : beforeRoutes){
                 exchange.pathVariables = route.match(exchange);
                 if(exchange.pathVariables == null)
                     continue;
-                for(RequestHandler handler : middleware){
+                for(RequestHandler handler : route.getHandlers()){
                     Object response;
                     try {
                         response = handler.handle(exchange);
@@ -238,30 +312,44 @@ public class HTTPServer implements RouteParamTransformerProvider {
                         response = exceptionHandler.handle(exchange, ex);
                     }
                     if(response != null){
-                        for(AfterRequestHandler afterHandler : after){
-                            response = afterHandler.handleAfter(exchange, response);
-                        }
                         exchange.write(transformResponse(response));
                         exchange.close();
                         return;
                     }
                 }
+                exchange.pathVariables = null;
+            }
+            exchange.pathVariables = null;
+            Object response = null;
+            routes:
+            for(Route route : routes){
+                exchange.pathVariables = route.match(exchange);
+                if(exchange.pathVariables == null)
+                    continue;
                 for(RequestHandler handler : route.getHandlers()){
-                    Object response = handler.handle(exchange);
-                    if(response != null){
-                        for(AfterRequestHandler afterHandler : after){
-                            response = afterHandler.handleAfter(exchange, response);
-                        }
-                        exchange.write(transformResponse(response));
-                        exchange.close();
-                        return;
-                    }
+                    response = handler.handle(exchange);
+                    if(response != null)
+                        break routes;
                 }
+                exchange.pathVariables = null;
+            }
+            if(response != null){
+                exchange.pathVariables = null;
+                for(Route route : afterRoutes){
+                    exchange.pathVariables = route.match(exchange);
+                    if(exchange.pathVariables == null)
+                        continue;
+                    for(AfterRequestHandler handler : route.getAfterHandlers())
+                        response = handler.handleAfter(exchange, response);
+                    exchange.pathVariables = null;
+                }
+                if(response != null)
+                    exchange.write(transformResponse(response));
                 if(exchange.getMethod() != HttpMethod.WEBSOCKET)
                     exchange.close();
-                return;
+            }else {
+                exchange.write(transformResponse(notFoundHandler.handle(exchange)));
             }
-            exchange.write(transformResponse(notFoundHandler.handle(exchange)));
         }catch(Throwable ex){
             try {
                 exchange.write(transformResponse(exceptionHandler.handle(exchange, ex)));
@@ -278,6 +366,14 @@ public class HTTPServer implements RouteParamTransformerProvider {
 
     public RouteParamTransformer getRouteParamTransformer(String type) {
         return routeParamTransformers.stream().filter(t -> t.canTransform(type)).findFirst().orElse(null);
+    }
+
+    public RequestHandler getBeforeMiddleware(String name){
+        return beforeMiddleware.get(name);
+    }
+
+    public AfterRequestHandler getAfterMiddleware(String name){
+        return afterMiddleware.get(name);
     }
 
     public List<RouteAutoInjector> getRouteAutoInjectors(){

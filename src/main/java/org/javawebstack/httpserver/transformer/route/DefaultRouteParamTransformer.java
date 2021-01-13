@@ -5,7 +5,9 @@ import java.util.UUID;
 public class DefaultRouteParamTransformer extends RouteParamTransformer {
     public static final RouteParamTransformer INSTANCE = new DefaultRouteParamTransformer();
     protected DefaultRouteParamTransformer(){
-        add("s|string", "[0-9A-Za-z %:\\-\\+\\.]+", (e,s) -> s );
+        add("*|any", ".*", (e,s) -> s );
+        add("*+|any+", ".+", (e,s) -> s );
+        add("s|string", "[^/]+", (e,s) -> s );
         add("short", "\\-?[0-9]+", (e,s) -> Short.parseShort((String) s) );
         add("i|int|integer", "\\-?[0-9]+", (e,s) -> Integer.parseInt((String) s) );
         add("i*|int*|integer*", "[0-9]+", (e,s) -> Integer.parseInt((String) s) );
