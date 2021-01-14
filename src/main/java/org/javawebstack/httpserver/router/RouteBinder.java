@@ -47,47 +47,19 @@ public class RouteBinder {
             if(methodWith != null)
                 middlewares.addAll(Arrays.asList(methodWith.value()));
             for(Get a : getAnnotations(Get.class, method)){
-                for(String name : middlewares){
-                    RequestHandler before = server.getBeforeMiddleware(name);
-                    if(before != null)
-                        server.beforeGet(a.value(), before);
-                    AfterRequestHandler after = server.getAfterMiddleware(name);
-                    if(after != null)
-                        server.afterGet(a.value(), after);
-                }
+                bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
                 binds.add(new Bind(HttpMethod.GET, a.value()));
             }
             for(Post a : getAnnotations(Post.class, method)){
-                for(String name : middlewares){
-                    RequestHandler before = server.getBeforeMiddleware(name);
-                    if(before != null)
-                        server.beforePost(a.value(), before);
-                    AfterRequestHandler after = server.getAfterMiddleware(name);
-                    if(after != null)
-                        server.afterPost(a.value(), after);
-                }
+                bindMiddlewares(HttpMethod.POST, globalPrefix, prefixes, a.value(), middlewares);
                 binds.add(new Bind(HttpMethod.POST, a.value()));
             }
             for(Put a : getAnnotations(Put.class, method)){
-                for(String name : middlewares){
-                    RequestHandler before = server.getBeforeMiddleware(name);
-                    if(before != null)
-                        server.beforePut(a.value(), before);
-                    AfterRequestHandler after = server.getAfterMiddleware(name);
-                    if(after != null)
-                        server.afterPut(a.value(), after);
-                }
+                bindMiddlewares(HttpMethod.PUT, globalPrefix, prefixes, a.value(), middlewares);
                 binds.add(new Bind(HttpMethod.PUT, a.value()));
             }
             for(Delete a : getAnnotations(Delete.class, method)){
-                for(String name : middlewares){
-                    RequestHandler before = server.getBeforeMiddleware(name);
-                    if(before != null)
-                        server.beforeDelete(a.value(), before);
-                    AfterRequestHandler after = server.getAfterMiddleware(name);
-                    if(after != null)
-                        server.afterDelete(a.value(), after);
-                }
+                bindMiddlewares(HttpMethod.DELETE, globalPrefix, prefixes, a.value(), middlewares);
                 binds.add(new Bind(HttpMethod.DELETE, a.value()));
             }
             if(binds.size() > 0){
@@ -97,6 +69,19 @@ public class RouteBinder {
                         server.route(bind.method, buildPattern(globalPrefix, prefix, bind.path), handler);
                     }
                 }
+            }
+        }
+    }
+
+    private void bindMiddlewares(HttpMethod method, String globalPrefix, List<String> prefixes, String path, List<String> middlewares){
+        for(String name : middlewares){
+            RequestHandler before = server.getBeforeMiddleware(name);
+            AfterRequestHandler after = server.getAfterMiddleware(name);
+            for(String prefix : prefixes){
+                if(before != null)
+                    server.beforeRoute(method, buildPattern(globalPrefix, prefix, path), before);
+                if(after != null)
+                    server.afterRoute(method, buildPattern(globalPrefix, prefix, path), after);
             }
         }
     }

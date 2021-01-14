@@ -294,44 +294,44 @@ public class HTTPServer implements RouteParamTransformerProvider {
 
     public void execute(Exchange exchange){
         try {
-            for(RequestInterceptor ic : beforeInterceptors){
-                if(ic.intercept(exchange)){
-                    exchange.close();
-                    return;
-                }
-            }
-            for(Route route : beforeRoutes){
-                exchange.pathVariables = route.match(exchange);
-                if(exchange.pathVariables == null)
-                    continue;
-                for(RequestHandler handler : route.getHandlers()){
-                    Object response;
-                    try {
-                        response = handler.handle(exchange);
-                    }catch (Throwable ex){
-                        response = exceptionHandler.handle(exchange, ex);
-                    }
-                    if(response != null){
-                        exchange.write(transformResponse(response));
+            Object response = null;
+            try {
+                for(RequestInterceptor ic : beforeInterceptors){
+                    if(ic.intercept(exchange)){
                         exchange.close();
                         return;
                     }
                 }
-                exchange.pathVariables = null;
-            }
-            exchange.pathVariables = null;
-            Object response = null;
-            routes:
-            for(Route route : routes){
-                exchange.pathVariables = route.match(exchange);
-                if(exchange.pathVariables == null)
-                    continue;
-                for(RequestHandler handler : route.getHandlers()){
-                    response = handler.handle(exchange);
-                    if(response != null)
-                        break routes;
+                for(Route route : beforeRoutes){
+                    exchange.pathVariables = route.match(exchange);
+                    if(exchange.pathVariables == null)
+                        continue;
+                    for(RequestHandler handler : route.getHandlers()){
+                        try {
+                            response = handler.handle(exchange);
+                        }catch (Throwable ex){
+                            response = exceptionHandler.handle(exchange, ex);
+                        }
+                    }
+                    exchange.pathVariables = null;
                 }
                 exchange.pathVariables = null;
+                if(response == null){
+                    routes:
+                    for(Route route : routes){
+                        exchange.pathVariables = route.match(exchange);
+                        if(exchange.pathVariables == null)
+                            continue;
+                        for(RequestHandler handler : route.getHandlers()){
+                            response = handler.handle(exchange);
+                            if(response != null)
+                                break routes;
+                        }
+                        exchange.pathVariables = null;
+                    }
+                }
+            }catch(Throwable ex){
+                response = exceptionHandler.handle(exchange, ex);
             }
             if(response != null){
                 exchange.pathVariables = null;
