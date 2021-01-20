@@ -333,23 +333,21 @@ public class HTTPServer implements RouteParamTransformerProvider {
             }catch(Throwable ex){
                 response = exceptionHandler.handle(exchange, ex);
             }
-            if(response != null){
+            if(response == null)
+                response = notFoundHandler.handle(exchange);
+            exchange.pathVariables = null;
+            for(Route route : afterRoutes){
+                exchange.pathVariables = route.match(exchange);
+                if(exchange.pathVariables == null)
+                    continue;
+                for(AfterRequestHandler handler : route.getAfterHandlers())
+                    response = handler.handleAfter(exchange, response);
                 exchange.pathVariables = null;
-                for(Route route : afterRoutes){
-                    exchange.pathVariables = route.match(exchange);
-                    if(exchange.pathVariables == null)
-                        continue;
-                    for(AfterRequestHandler handler : route.getAfterHandlers())
-                        response = handler.handleAfter(exchange, response);
-                    exchange.pathVariables = null;
-                }
-                if(response != null)
-                    exchange.write(transformResponse(response));
-                if(exchange.getMethod() != HttpMethod.WEBSOCKET)
-                    exchange.close();
-            }else {
-                exchange.write(transformResponse(notFoundHandler.handle(exchange)));
             }
+            if(response != null)
+                exchange.write(transformResponse(response));
+            if(exchange.getMethod() != HttpMethod.WEBSOCKET)
+                exchange.close();
         }catch(Throwable ex){
             try {
                 exchange.write(transformResponse(exceptionHandler.handle(exchange, ex)));
