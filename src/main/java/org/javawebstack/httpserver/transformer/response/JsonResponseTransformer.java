@@ -1,29 +1,19 @@
 package org.javawebstack.httpserver.transformer.response;
 
-import com.google.gson.*;
-import com.google.gson.annotations.Expose;
+import org.javawebstack.abstractdata.AbstractMapper;
+import org.javawebstack.abstractdata.NamingPolicy;
 
 public class JsonResponseTransformer implements ResponseTransformer {
 
-    private final Gson gson;
+    private final AbstractMapper mapper;
     private boolean ignoreStrings = false;
 
     public JsonResponseTransformer(){
-        this(new GsonBuilder().disableHtmlEscaping()
-                .setExclusionStrategies(new ExclusionStrategy() {
-                    public boolean shouldSkipField(FieldAttributes fieldAttributes) {
-                        if (fieldAttributes.getAnnotation(Expose.class) != null && !fieldAttributes.getAnnotation(Expose.class).serialize())
-                            return true;
-                        return false;
-                    }
-                    public boolean shouldSkipClass(Class<?> aClass) { return false;  }
-                })
-                .setDateFormat("yyyy-MM-dd HH:mm:ss")
-                .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create());
+        this(new AbstractMapper().setNamingPolicy(NamingPolicy.SNAKE_CASE));
     }
 
-    public JsonResponseTransformer(Gson gson){
-        this.gson = gson;
+    public JsonResponseTransformer(AbstractMapper mapper){
+        this.mapper = mapper;
     }
 
     public JsonResponseTransformer ignoreStrings(){
@@ -36,6 +26,6 @@ public class JsonResponseTransformer implements ResponseTransformer {
             return null;
         if(ignoreStrings && object instanceof String)
             return null;
-        return gson.toJson(object);
+        return mapper.toAbstract(object).toJsonString();
     }
 }
