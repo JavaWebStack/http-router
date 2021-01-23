@@ -324,6 +324,8 @@ public class HTTPServer implements RouteParamTransformerProvider {
                             continue;
                         for(RequestHandler handler : route.getHandlers()){
                             response = handler.handle(exchange);
+                            if(exchange.getMethod() == HttpMethod.WEBSOCKET)
+                                return;
                             if(response != null)
                                 break routes;
                         }
