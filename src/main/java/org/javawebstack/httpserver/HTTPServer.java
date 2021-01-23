@@ -350,6 +350,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
                 exchange.write(transformResponse(response));
             if(exchange.getMethod() != HttpMethod.WEBSOCKET)
                 exchange.close();
+            return;
         }catch(Throwable ex){
             try {
                 exchange.write(transformResponse(exceptionHandler.handle(exchange, ex)));
@@ -407,4 +408,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
         return webSocketHandler;
     }
 
+    public ExceptionHandler getExceptionHandler() {
+        return exceptionHandler;
+    }
 }

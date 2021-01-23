@@ -20,7 +20,9 @@ public class InternalWebSocketRequestHandler implements RequestHandler {
         InternalWebSocketAdapter.webSockets.put(id, new WebSocket(exchange, handler));
         try {
             exchange.getServer().getInternalWebSocketHandler().handle(exchange.getPath(), (Request) exchange.rawRequest(), exchange.rawRequest(), exchange.rawResponse());
-        } catch (IOException | ServletException ignored) {}
+        } catch (IOException | ServletException ignored) {
+            ignored.printStackTrace();
+        }
         return null;
     }
 }

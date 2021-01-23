@@ -19,7 +19,11 @@ public class InternalWebSocketAdapter {
             return;
         }
         socket.setSession(session);
-        socket.getHandler().onConnect(socket);
+        try {
+            socket.getHandler().onConnect(socket);
+        }catch (Throwable t) {
+            socket.getExchange().getServer().getExceptionHandler().handle(socket.getExchange(), t);
+        }
     }
     @OnWebSocketMessage
     public void onMessage(Session session, String message){
@@ -28,14 +32,22 @@ public class InternalWebSocketAdapter {
             session.close(500, "Server Error");
             return;
         }
-        socket.getHandler().onMessage(socket, message);
+        try {
+            socket.getHandler().onMessage(socket, message);
+        }catch (Throwable t) {
+            socket.getExchange().getServer().getExceptionHandler().handle(socket.getExchange(), t);
+        }
     }
     @OnWebSocketClose
     public void onClose(Session session, int code, String reason){
         WebSocket socket = webSockets.get(session.getUpgradeResponse().getHeader("X-Server-WSID"));
         if(socket != null){
+            try {
+                socket.getHandler().onClose(socket, code, reason);
+            }catch (Throwable t) {
+                socket.getExchange().getServer().getExceptionHandler().handle(socket.getExchange(), t);
+            }
             webSockets.remove(session.getUpgradeResponse().getHeader("X-Server-WSID"));
-            socket.getHandler().onClose(socket, code, reason);
         }
     }
 }
