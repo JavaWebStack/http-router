@@ -1,7 +1,7 @@
 package org.javawebstack.httpserver.test;
 
 import com.google.gson.JsonElement;
-import org.javawebstack.graph.GraphElement;
+import org.javawebstack.abstractdata.AbstractElement;
 import org.javawebstack.httpserver.Exchange;
 import org.javawebstack.httpserver.HTTPServer;
 import org.javawebstack.httpserver.helper.MimeType;
@@ -98,25 +98,25 @@ public class TestExchange extends Exchange {
         Assertions.assertEquals(content, mockRes.getContentString(), message);
         return this;
     }
-    private GraphElement mockResponseBody(MockHttpServletResponse response){
+    private AbstractElement mockResponseBody(MockHttpServletResponse response){
         MimeType type = MimeType.byMimeType(response.getContentType());
         if(type == null)
             type = MimeType.JSON;
         switch (type){
             default:
-                return GraphElement.fromJson(response.getContentString());
+                return AbstractElement.fromJson(response.getContentString());
             case YAML:
-                return GraphElement.fromYaml(response.getContentString(), true);
+                return AbstractElement.fromYaml(response.getContentString(), true);
             case X_WWW_FORM_URLENCODED:
-                return GraphElement.fromFormData(response.getContentString());
+                return AbstractElement.fromFormData(response.getContentString());
         }
     }
-    private boolean checkGraph(GraphElement element, Object value){
+    private boolean checkGraph(AbstractElement element, Object value){
         if(value == null)
             return element == null;
         if(element == null)
             return false;
-        GraphElement val = getServer().getGraphMapper().toGraph(value);
+        AbstractElement val = getServer().getAbstractMapper().toAbstract(value);
         if(val.isNull())
             return element.isNull();
         if(val.isObject()){

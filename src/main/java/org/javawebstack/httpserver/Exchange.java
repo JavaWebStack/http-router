@@ -1,8 +1,8 @@
 package org.javawebstack.httpserver;
 
 import com.google.gson.JsonElement;
-import org.javawebstack.graph.GraphElement;
-import org.javawebstack.graph.GraphNull;
+import org.javawebstack.abstractdata.AbstractElement;
+import org.javawebstack.abstractdata.AbstractNull;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.helper.MimeType;
 import org.javawebstack.validator.ValidationException;
@@ -49,22 +49,22 @@ public class Exchange {
         MimeType type = MimeType.byMimeType(getContentType());
         if(type == null)
             type = MimeType.JSON;
-        GraphElement request = GraphNull.INSTANCE;
+        AbstractElement request = AbstractNull.INSTANCE;
         switch (type){
             case JSON:
-                request = GraphElement.fromJson(body);
+                request = AbstractElement.fromJson(body);
                 break;
             case YAML:
-                request = GraphElement.fromYaml(body, !(clazz.isArray() || Collection.class.isAssignableFrom(clazz)));
+                request = AbstractElement.fromYaml(body, !(clazz.isArray() || Collection.class.isAssignableFrom(clazz)));
                 break;
             case X_WWW_FORM_URLENCODED:
-                request = GraphElement.fromFormData(body);
+                request = AbstractElement.fromFormData(body);
                 break;
         }
         ValidationResult result = Validator.getValidator(clazz).validate(request);
         if(!result.isValid())
             throw new ValidationException(result);
-        return server.getGraphMapper().fromGraph(request, clazz);
+        return server.getAbstractMapper().fromAbstract(request, clazz);
     }
 
     public HTTPServer getServer() {
@@ -193,12 +193,12 @@ public class Exchange {
         return auth.substring(7);
     }
     public <T> T getBodyPath(String path, Class<T> clazz){
-        return server.getGraphMapper().fromGraph(getBodyPathElement(path), clazz);
+        return server.getAbstractMapper().fromAbstract(getBodyPathElement(path), clazz);
     }
-    public GraphElement getBodyPathElement(String path){
-        return getPathElement(body(GraphElement.class), path);
+    public AbstractElement getBodyPathElement(String path){
+        return getPathElement(body(AbstractElement.class), path);
     }
-    protected static GraphElement getPathElement(GraphElement source, String path){
+    protected static AbstractElement getPathElement(AbstractElement source, String path){
         if(source == null || path == null || path.length() == 0)
             return source;
         if(!path.contains(".")){
