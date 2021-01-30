@@ -114,6 +114,14 @@ public class Exchange {
         } catch (IOException ignored){}
         return this;
     }
+    public Exchange write(InputStream stream) throws IOException {
+        byte[] buffer = new byte[1024];
+        int r;
+        while ((r = stream.read(buffer)) != -1)
+            write(buffer, 0, r);
+        stream.close();
+        return this;
+    }
     public Exchange close() {
         try {
             response.getOutputStream().close();
@@ -161,10 +169,8 @@ public class Exchange {
         return possible[0];
     }
 
-    public Exchange contentType(MimeType type){
-        if (type == null)
-            return contentType("text/plain");
-        return contentType(type.getMimeTypes().get(0));
+    public Exchange contentType(MimeType type) {
+        return contentType(type != null ? type.getMimeTypes().get(0): null);
     }
 
     public Exchange contentType(String contentType) {

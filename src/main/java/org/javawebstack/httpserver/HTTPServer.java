@@ -20,6 +20,8 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.javawebstack.httpserver.handler.*;
+import org.javawebstack.httpserver.util.DirectoryFileProvider;
+import org.javawebstack.httpserver.util.ResourceFileProvider;
 import org.javawebstack.httpserver.websocket.InternalWebSocketAdapter;
 import org.javawebstack.httpserver.websocket.InternalWebSocketRequestHandler;
 import org.javawebstack.injector.Injector;
@@ -130,11 +132,23 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer staticDirectory(String pathPrefix, File directory){
-        return get(pathPrefix+(pathPrefix.endsWith("/") ? "" : "/")+"{*:path}", new StaticDirectoryHandler(directory));
+        return staticHandler(pathPrefix, new StaticFileHandler().add(new DirectoryFileProvider(directory)));
     }
 
     public HTTPServer staticDirectory(String pathPrefix, String directory){
         return staticDirectory(pathPrefix, new File(directory));
+    }
+
+    public HTTPServer staticResourceDirectory(String pathPrefix, String prefix){
+        return staticResourceDirectory(pathPrefix, null, prefix);
+    }
+
+    public HTTPServer staticResourceDirectory(String pathPrefix, ClassLoader classLoader, String prefix){
+        return staticHandler(pathPrefix, new StaticFileHandler().add(new ResourceFileProvider(classLoader, prefix)));
+    }
+
+    public HTTPServer staticHandler(String pathPrefix, StaticFileHandler handler) {
+        return get(pathPrefix+(pathPrefix.endsWith("/") ? "" : "/")+"{*:path}", handler);
     }
 
     public HTTPServer beforeDelete(String pattern, RequestHandler... handlers){
