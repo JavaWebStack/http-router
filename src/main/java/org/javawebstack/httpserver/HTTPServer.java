@@ -27,6 +27,7 @@ import org.reflections.Reflections;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.logging.Level;
@@ -126,6 +127,14 @@ public class HTTPServer implements RouteParamTransformerProvider {
 
     public HTTPServer delete(String pattern, RequestHandler... handlers){
         return route(HttpMethod.DELETE, pattern, handlers);
+    }
+
+    public HTTPServer staticDirectory(String pathPrefix, File directory){
+        return get(pathPrefix+(pathPrefix.endsWith("/") ? "" : "/")+"{*:path}", new StaticDirectoryHandler(directory));
+    }
+
+    public HTTPServer staticDirectory(String pathPrefix, String directory){
+        return staticDirectory(pathPrefix, new File(directory));
     }
 
     public HTTPServer beforeDelete(String pattern, RequestHandler... handlers){

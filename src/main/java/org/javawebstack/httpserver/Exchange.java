@@ -162,10 +162,14 @@ public class Exchange {
     }
 
     public Exchange contentType(MimeType type){
+        if (type == null)
+            return contentType("text/plain");
         return contentType(type.getMimeTypes().get(0));
     }
 
-    public Exchange contentType(String contentType){
+    public Exchange contentType(String contentType) {
+        if (contentType == null || contentType.equals(""))
+            return contentType("text/plain");
         return header("Content-Type", contentType);
     }
 
