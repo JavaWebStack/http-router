@@ -1,13 +1,10 @@
 package org.javawebstack.httpserver.test;
 
-import com.google.gson.JsonElement;
 import org.javawebstack.abstractdata.AbstractElement;
 import org.javawebstack.httpserver.Exchange;
 import org.javawebstack.httpserver.HTTPServer;
 import org.javawebstack.httpserver.helper.MimeType;
 import org.junit.jupiter.api.Assertions;
-
-import java.util.Collection;
 
 public class TestExchange extends Exchange {
     private MockHttpServletRequest mockReq;
@@ -50,12 +47,60 @@ public class TestExchange extends Exchange {
         Assertions.assertNotEquals(status, mockRes.getStatus(), message);
         return this;
     }
+    public TestExchange assertOk(){
+        Assertions.assertEquals(200, mockRes.getStatus());
+        return this;
+    }
+    public TestExchange assertOk(String message){
+        Assertions.assertEquals(200, mockRes.getStatus(), message);
+        return this;
+    }
+    public TestExchange assertCreated(){
+        Assertions.assertEquals(201, mockRes.getStatus());
+        return this;
+    }
+    public TestExchange assertCreated(String message){
+        Assertions.assertEquals(201, mockRes.getStatus(), message);
+        return this;
+    }
+    public TestExchange assertNotFound(){
+        Assertions.assertEquals(404, mockRes.getStatus());
+        return this;
+    }
+    public TestExchange assertNotFound(String message){
+        Assertions.assertEquals(404, mockRes.getStatus(), message);
+        return this;
+    }
+    public TestExchange assertBadRequest(){
+        Assertions.assertEquals(400, mockRes.getStatus());
+        return this;
+    }
+    public TestExchange assertBadRequest(String message){
+        Assertions.assertEquals(400, mockRes.getStatus(), message);
+        return this;
+    }
+    public TestExchange assertForbidden(){
+        Assertions.assertEquals(403, mockRes.getStatus());
+        return this;
+    }
+    public TestExchange assertForbidden(String message){
+        Assertions.assertEquals(403, mockRes.getStatus(), message);
+        return this;
+    }
+    public TestExchange assertUnauthorized(){
+        Assertions.assertEquals(401, mockRes.getStatus());
+        return this;
+    }
+    public TestExchange assertUnauthorized(String message){
+        Assertions.assertEquals(401, mockRes.getStatus(), message);
+        return this;
+    }
     public TestExchange assertSuccess(){
-        Assertions.assertEquals(200, mockRes.getStatus()/100);
+        Assertions.assertEquals(2, (mockRes.getStatus() / 100 ) * 100);
         return this;
     }
     public TestExchange assertSuccess(String message){
-        Assertions.assertEquals(200, mockRes.getStatus()/100, message);
+        Assertions.assertEquals(2, (mockRes.getStatus() / 100 ) * 100, message);
         return this;
     }
     public TestExchange assertError(){
