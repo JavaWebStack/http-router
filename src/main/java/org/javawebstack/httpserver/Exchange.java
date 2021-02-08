@@ -5,6 +5,7 @@ import org.javawebstack.abstractdata.AbstractElement;
 import org.javawebstack.abstractdata.AbstractNull;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.helper.MimeType;
+import org.javawebstack.validator.ValidationContext;
 import org.javawebstack.validator.ValidationException;
 import org.javawebstack.validator.ValidationResult;
 import org.javawebstack.validator.Validator;
@@ -61,7 +62,7 @@ public class Exchange {
                 request = AbstractElement.fromFormData(body);
                 break;
         }
-        ValidationResult result = Validator.getValidator(clazz).validate(request);
+        ValidationResult result = Validator.getValidator(clazz).validate(new ValidationContext().attrib("exchange", this), request);
         if(!result.isValid())
             throw new ValidationException(result);
         return server.getAbstractMapper().fromAbstract(request, clazz);
