@@ -96,11 +96,11 @@ public class TestExchange extends Exchange {
         return this;
     }
     public TestExchange assertSuccess(){
-        Assertions.assertEquals(2, (mockRes.getStatus() / 100 ) * 100);
+        Assertions.assertEquals(200, (mockRes.getStatus() / 100 ) * 100);
         return this;
     }
     public TestExchange assertSuccess(String message){
-        Assertions.assertEquals(2, (mockRes.getStatus() / 100 ) * 100, message);
+        Assertions.assertEquals(200, (mockRes.getStatus() / 100 ) * 100, message);
         return this;
     }
     public TestExchange assertError(){
