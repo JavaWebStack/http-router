@@ -77,23 +77,39 @@ public class TestExchange extends Exchange {
         Assertions.assertEquals(201, mockRes.getStatus(), message);
         return this;
     }
+    
     public TestExchange assertNoContent() {
         Assertions.assertEquals(204, mockRes.getStatus());
         return this;
     }
+    
     public TestExchange assertNoContent(String message) {
         Assertions.assertEquals(204, mockRes.getStatus(), message);
         return this;
     }
+    
     public TestExchange assertRedirect() {
         Assertions.assertTrue(isRedirect());
         return this;
     }
-    public TestExchange assertRedirect(String url) {
-        Assertions.assertTrue(isRedirect());
+    
+    public TestExchange assertRedirect(String message) {
+        Assertions.assertTrue(isRedirect(), message);
+        return this;
+    }
+    
+    public TestExchange assertRedirectTo(String url) {
+        assertRedirect();
         Assertions.assertEquals(url, mockRes.getHeader("Location"));
         return this;
     }
+    
+    public TestExchange assertRedirectTo(String url, String message) {
+        assertRedirect(message);
+        Assertions.assertEquals(url, mockRes.getHeader("Location"), message);
+        return this;
+    }
+    
     public TestExchange assertNotFound(){
         Assertions.assertEquals(404, mockRes.getStatus());
         return this;
