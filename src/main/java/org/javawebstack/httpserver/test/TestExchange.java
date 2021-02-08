@@ -9,12 +9,14 @@ import org.junit.jupiter.api.Assertions;
 public class TestExchange extends Exchange {
     private MockHttpServletRequest mockReq;
     private MockHttpServletResponse mockRes;
+
     public TestExchange(HTTPServer service, MockHttpServletRequest request, MockHttpServletResponse response) {
         super(service, request, response);
         this.mockReq = request;
         this.mockRes = response;
     }
-    public TestExchange print(){
+
+    public TestExchange print() {
         printResponse();
         return this;
     }
@@ -23,131 +25,161 @@ public class TestExchange extends Exchange {
         return mockReq;
     }
 
-    public MockHttpServletResponse mockResponse(){
+    public MockHttpServletResponse mockResponse() {
         return mockRes;
     }
-    public TestExchange printResponse(){
-        System.out.println("HTTP Response "+mockRes.getStatus());
+
+    public TestExchange printResponse() {
+        System.out.println("HTTP Response " + mockRes.getStatus());
         System.out.println(mockRes.getContentString());
         return this;
     }
-    public TestExchange assertStatus(int status){
+
+    public TestExchange assertStatus(int status) {
         Assertions.assertEquals(status, mockRes.getStatus());
         return this;
     }
-    public TestExchange assertStatus(int status, String message){
+
+    public TestExchange assertStatus(int status, String message) {
         Assertions.assertEquals(status, mockRes.getStatus(), message);
         return this;
     }
-    public TestExchange assertNotStatus(int status){
+
+    public TestExchange assertNotStatus(int status) {
         Assertions.assertNotEquals(status, mockRes.getStatus());
         return this;
     }
-    public TestExchange assertNotStatus(int status, String message){
+
+    public TestExchange assertNotStatus(int status, String message) {
         Assertions.assertNotEquals(status, mockRes.getStatus(), message);
         return this;
     }
-    public TestExchange assertOk(){
+
+    public TestExchange assertOk() {
         Assertions.assertEquals(200, mockRes.getStatus());
         return this;
     }
-    public TestExchange assertOk(String message){
+
+    public TestExchange assertOk(String message) {
         Assertions.assertEquals(200, mockRes.getStatus(), message);
         return this;
     }
-    public TestExchange assertCreated(){
+
+    public TestExchange assertCreated() {
         Assertions.assertEquals(201, mockRes.getStatus());
         return this;
     }
-    public TestExchange assertCreated(String message){
+
+    public TestExchange assertCreated(String message) {
         Assertions.assertEquals(201, mockRes.getStatus(), message);
         return this;
     }
-    public TestExchange assertNotFound(){
+
+    public TestExchange assertNotFound() {
         Assertions.assertEquals(404, mockRes.getStatus());
         return this;
     }
-    public TestExchange assertNotFound(String message){
+
+    public TestExchange assertNotFound(String message) {
         Assertions.assertEquals(404, mockRes.getStatus(), message);
         return this;
     }
-    public TestExchange assertBadRequest(){
+
+    public TestExchange assertBadRequest() {
         Assertions.assertEquals(400, mockRes.getStatus());
         return this;
     }
-    public TestExchange assertBadRequest(String message){
+
+    public TestExchange assertBadRequest(String message) {
         Assertions.assertEquals(400, mockRes.getStatus(), message);
         return this;
     }
-    public TestExchange assertForbidden(){
+
+    public TestExchange assertForbidden() {
         Assertions.assertEquals(403, mockRes.getStatus());
         return this;
     }
-    public TestExchange assertForbidden(String message){
+
+    public TestExchange assertForbidden(String message) {
         Assertions.assertEquals(403, mockRes.getStatus(), message);
         return this;
     }
-    public TestExchange assertUnauthorized(){
+
+    public TestExchange assertUnauthorized() {
         Assertions.assertEquals(401, mockRes.getStatus());
         return this;
     }
-    public TestExchange assertUnauthorized(String message){
+
+    public TestExchange assertUnauthorized(String message) {
         Assertions.assertEquals(401, mockRes.getStatus(), message);
         return this;
     }
-    public TestExchange assertSuccess(){
-        Assertions.assertEquals(200, (mockRes.getStatus() / 100 ) * 100);
+
+    public TestExchange assertSuccess() {
+        Assertions.assertEquals(200, (mockRes.getStatus() / 100) * 100);
         return this;
     }
-    public TestExchange assertSuccess(String message){
-        Assertions.assertEquals(200, (mockRes.getStatus() / 100 ) * 100, message);
+
+    public TestExchange assertSuccess(String message) {
+        Assertions.assertEquals(200, (mockRes.getStatus() / 100) * 100, message);
         return this;
     }
-    public TestExchange assertError(){
+
+    public TestExchange assertError() {
         Assertions.assertTrue(mockRes.getStatus() >= 400);
         return this;
     }
-    public TestExchange assertError(String message){
+
+    public TestExchange assertError(String message) {
         Assertions.assertTrue(mockRes.getStatus() >= 400, message);
         return this;
     }
-    public TestExchange assertHeader(String key, String value){
+
+    public TestExchange assertHeader(String key, String value) {
         Assertions.assertEquals(value, mockRes.getHeader(key));
         return this;
     }
-    public TestExchange assertHeader(String key, String value, String message){
+
+    public TestExchange assertHeader(String key, String value, String message) {
         Assertions.assertEquals(value, mockRes.getHeader(key), message);
         return this;
     }
-    public TestExchange assertJsonPath(String path, Object value){
+
+    public TestExchange assertJsonPath(String path, Object value) {
         Assertions.assertTrue(checkGraph(getPathElement(mockResponseBody(mockRes), path), value));
         return this;
     }
-    public TestExchange assertJsonPath(String path, Object value, String message){
+
+    public TestExchange assertJsonPath(String path, Object value, String message) {
         Assertions.assertTrue(checkGraph(getPathElement(mockResponseBody(mockRes), path), value), message);
         return this;
     }
-    public TestExchange assertJson(Object value){
+
+    public TestExchange assertJson(Object value) {
         assertJsonPath(null, value);
         return this;
     }
-    public TestExchange assertJson(Object value, String message){
+
+    public TestExchange assertJson(Object value, String message) {
         assertJsonPath(null, value, message);
         return this;
     }
-    public TestExchange assertBody(String content){
+
+    public TestExchange assertBody(String content) {
         Assertions.assertEquals(content, mockRes.getContentString());
         return this;
     }
-    public TestExchange assertBody(String content, String message){
+
+    public TestExchange assertBody(String content, String message) {
         Assertions.assertEquals(content, mockRes.getContentString(), message);
         return this;
     }
-    private AbstractElement mockResponseBody(MockHttpServletResponse response){
+
+    private AbstractElement mockResponseBody(MockHttpServletResponse response) {
         MimeType type = MimeType.byMimeType(response.getContentType());
-        if(type == null)
+        if (type == null)
             type = MimeType.JSON;
-        switch (type){
+        switch (type) {
             default:
                 return AbstractElement.fromJson(response.getContentString());
             case YAML:
@@ -156,48 +188,49 @@ public class TestExchange extends Exchange {
                 return AbstractElement.fromFormData(response.getContentString());
         }
     }
-    private boolean checkGraph(AbstractElement element, Object value){
-        if(value == null)
+
+    private boolean checkGraph(AbstractElement element, Object value) {
+        if (value == null)
             return element == null;
-        if(element == null)
+        if (element == null)
             return false;
         AbstractElement val = getServer().getAbstractMapper().toAbstract(value);
-        if(val.isNull())
+        if (val.isNull())
             return element.isNull();
-        if(val.isObject()){
-            if(!element.isObject())
+        if (val.isObject()) {
+            if (!element.isObject())
                 return false;
-            for(String key : val.object().keys()){
-                if(!element.object().has(key))
+            for (String key : val.object().keys()) {
+                if (!element.object().has(key))
                     return false;
-                if(!checkGraph(element.object().get(key), val.object().get(key)))
-                    return false;
-            }
-            return true;
-        }
-        if(val.isArray()){
-            if(!element.isArray())
-                return false;
-            if(val.array().size() != element.array().size())
-                return false;
-            for(int i=0; i<val.array().size(); i++){
-                if(!checkGraph(element.array().get(i), val.array().get(i)))
+                if (!checkGraph(element.object().get(key), val.object().get(key)))
                     return false;
             }
             return true;
         }
-        if(val.isString()){
-            if(!element.isString())
+        if (val.isArray()) {
+            if (!element.isArray())
+                return false;
+            if (val.array().size() != element.array().size())
+                return false;
+            for (int i = 0; i < val.array().size(); i++) {
+                if (!checkGraph(element.array().get(i), val.array().get(i)))
+                    return false;
+            }
+            return true;
+        }
+        if (val.isString()) {
+            if (!element.isString())
                 return false;
             return val.string().equals(element.string());
         }
-        if(val.isNumber()){
-            if(!element.isNumber())
+        if (val.isNumber()) {
+            if (!element.isNumber())
                 return false;
             return val.number().equals(element.number());
         }
-        if(val.isBoolean()){
-            if(!element.isBoolean())
+        if (val.isBoolean()) {
+            if (!element.isBoolean())
                 return false;
             return val.bool() == element.bool();
         }
