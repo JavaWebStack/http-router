@@ -21,11 +21,11 @@ public class MockServletOutputStream extends ServletOutputStream {
         buffer.write(b);
     }
 
-    public byte[] getBytes(){
+    public byte[] getBytes() {
         return buffer.toByteArray();
     }
 
-    public String getString(){
+    public String getString() {
         return new String(getBytes(), StandardCharsets.UTF_8);
     }
 

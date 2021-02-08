@@ -8,23 +8,23 @@ public class JsonResponseTransformer implements ResponseTransformer {
     private final AbstractMapper mapper;
     private boolean ignoreStrings = false;
 
-    public JsonResponseTransformer(){
+    public JsonResponseTransformer() {
         this(new AbstractMapper().setNamingPolicy(NamingPolicy.SNAKE_CASE));
     }
 
-    public JsonResponseTransformer(AbstractMapper mapper){
+    public JsonResponseTransformer(AbstractMapper mapper) {
         this.mapper = mapper;
     }
 
-    public JsonResponseTransformer ignoreStrings(){
+    public JsonResponseTransformer ignoreStrings() {
         this.ignoreStrings = true;
         return this;
     }
 
     public String transform(Object object) {
-        if(object instanceof byte[])
+        if (object instanceof byte[])
             return null;
-        if(ignoreStrings && object instanceof String)
+        if (ignoreStrings && object instanceof String)
             return null;
         return mapper.toAbstract(object).toJsonString();
     }

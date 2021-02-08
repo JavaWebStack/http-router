@@ -6,6 +6,7 @@ import java.util.logging.Level;
 
 public interface ExceptionHandler {
     Object handle(Exchange exchange, Throwable ex);
+
     class DefaultExceptionHandler implements ExceptionHandler {
         public Object handle(Exchange exchange, Throwable ex) {
             exchange.getServer().getLogger().log(Level.SEVERE, ex, () -> "An internal server error occured!");

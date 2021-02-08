@@ -10,12 +10,12 @@ public class MockServletInputStream extends ServletInputStream {
     private final int size;
     private final ByteArrayInputStream inputStream;
 
-    public MockServletInputStream(byte[] bytes){
+    public MockServletInputStream(byte[] bytes) {
         inputStream = new ByteArrayInputStream(bytes);
         size = bytes.length;
     }
 
-    public MockServletInputStream(){
+    public MockServletInputStream() {
         this(new byte[0]);
     }
 
@@ -35,7 +35,7 @@ public class MockServletInputStream extends ServletInputStream {
         return inputStream.read();
     }
 
-    public int size(){
+    public int size() {
         return size;
     }
 
