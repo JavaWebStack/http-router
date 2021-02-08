@@ -82,11 +82,15 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer beforeInterceptor(RequestInterceptor handler) {
+        if (injector != null)
+            injector.inject(handler);
         beforeInterceptors.add(handler);
         return this;
     }
 
     public HTTPServer routeAutoInjector(RouteAutoInjector injector) {
+        if (this.injector != null)
+            this.injector.inject(injector);
         routeAutoInjectors.add(injector);
         return this;
     }
@@ -148,6 +152,8 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer staticHandler(String pathPrefix, StaticFileHandler handler) {
+        if (injector != null)
+            injector.inject(handler);
         return get(pathPrefix + (pathPrefix.endsWith("/") ? "" : "/") + "{*:path}", handler);
     }
 
@@ -160,16 +166,28 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer route(HttpMethod method, String pattern, RequestHandler... handlers) {
+        if (injector != null) {
+            for (RequestHandler handler : handlers)
+                injector.inject(handler);
+        }
         routes.add(new Route(this, method, pattern, Arrays.asList(handlers)));
         return this;
     }
 
     public HTTPServer beforeRoute(HttpMethod method, String pattern, RequestHandler... handlers) {
+        if (injector != null) {
+            for (RequestHandler handler : handlers)
+                injector.inject(handler);
+        }
         beforeRoutes.add(new Route(this, method, pattern, Arrays.asList(handlers)));
         return this;
     }
 
     public HTTPServer afterRoute(HttpMethod method, String pattern, AfterRequestHandler... handlers) {
+        if (injector != null) {
+            for (AfterRequestHandler handler : handlers)
+                injector.inject(handler);
+        }
         afterRoutes.add(new Route(this, method, pattern, null).setAfterHandlers(Arrays.asList(handlers)));
         return this;
     }
@@ -205,35 +223,49 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer webSocket(String pattern, WebSocketHandler handler) {
+        if (injector != null)
+            injector.inject(handler);
         return route(HttpMethod.WEBSOCKET, pattern, new InternalWebSocketRequestHandler(handler));
     }
 
     public HTTPServer middleware(String name, RequestHandler handler) {
+        if (injector != null)
+            injector.inject(handler);
         beforeMiddleware.put(name, handler);
         return this;
     }
 
     public HTTPServer middleware(String name, AfterRequestHandler handler) {
+        if (injector != null)
+            injector.inject(handler);
         afterMiddleware.put(name, handler);
         return this;
     }
 
     public HTTPServer notFound(RequestHandler handler) {
+        if (injector != null)
+            injector.inject(handler);
         notFoundHandler = handler;
         return this;
     }
 
     public HTTPServer routeParamTransformer(RouteParamTransformer transformer) {
+        if (injector != null)
+            injector.inject(transformer);
         routeParamTransformers.add(transformer);
         return this;
     }
 
     public HTTPServer responseTransformer(ResponseTransformer transformer) {
+        if (injector != null)
+            injector.inject(transformer);
         responseTransformers.add(transformer);
         return this;
     }
 
     public HTTPServer exceptionHandler(ExceptionHandler handler) {
+        if (injector != null)
+            injector.inject(handler);
         exceptionHandler = handler;
         return this;
     }
