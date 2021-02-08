@@ -13,7 +13,7 @@ public class WebSocket {
     private final WebSocketHandler handler;
     private Session session;
 
-    public WebSocket(Exchange exchange, WebSocketHandler handler){
+    public WebSocket(Exchange exchange, WebSocketHandler handler) {
         this.exchange = exchange;
         this.handler = handler;
     }
@@ -26,28 +26,30 @@ public class WebSocket {
         return handler;
     }
 
-    void setSession(Session session){
+    void setSession(Session session) {
         this.session = session;
     }
 
-    public void close(){
+    public void close() {
         session.close();
     }
 
-    public void close(int code, String reason){
+    public void close(int code, String reason) {
         session.close(code, reason);
     }
 
-    public void send(String message){
+    public void send(String message) {
         try {
             session.getRemote().sendString(message);
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
     }
 
-    public void send(byte[] message){
+    public void send(byte[] message) {
         try {
             session.getRemote().sendBytes(ByteBuffer.wrap(message));
-        } catch (IOException ignored) {}
+        } catch (IOException ignored) {
+        }
     }
 
 }

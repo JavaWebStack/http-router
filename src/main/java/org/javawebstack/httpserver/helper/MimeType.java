@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public enum MimeType {
-    HTML("text/html", "html","htm"),
+    HTML("text/html", "html", "htm"),
     XHTML("application/xhtml+xml", "xhtml"),
     CSS("text/css", "css"),
     JS("application/javascript", "js"),
@@ -25,11 +25,11 @@ public enum MimeType {
     OGG("audio/ogg", "ogg"),
     YAML(new String[]{"text/yaml", "text/x-yaml", "application/yaml", "application/x-yaml"}, "yaml", "yml");
 
-    MimeType(String mimeType, String... extensions){
-        this(new String[]{ mimeType }, extensions);
+    MimeType(String mimeType, String... extensions) {
+        this(new String[]{mimeType}, extensions);
     }
 
-    MimeType(String[] mimeTypes, String... extensions){
+    MimeType(String[] mimeTypes, String... extensions) {
         this.mimeTypes = Arrays.asList(mimeTypes);
         this.extensions = Arrays.asList(extensions);
     }
@@ -45,30 +45,32 @@ public enum MimeType {
         return extensions;
     }
 
-    public static MimeType byExtension(String extension){
-        if(extension.startsWith("."))
+    public static MimeType byExtension(String extension) {
+        if (extension.startsWith("."))
             extension = extension.substring(1);
-        for(MimeType type : values()){
-            if(type.extensions.contains(extension)){
+        for (MimeType type : values()) {
+            if (type.extensions.contains(extension)) {
                 return type;
             }
         }
         return null;
     }
-    public static MimeType byMimeType(String mimeType){
-        for(MimeType type : values()){
-            if(type.mimeTypes.contains(mimeType)){
+
+    public static MimeType byMimeType(String mimeType) {
+        for (MimeType type : values()) {
+            if (type.mimeTypes.contains(mimeType)) {
                 return type;
             }
         }
         return null;
     }
-    public static MimeType byFileName(String fileName){
-        if(fileName.contains("/")) {
+
+    public static MimeType byFileName(String fileName) {
+        if (fileName.contains("/")) {
             String[] spl = fileName.split("/");
             fileName = spl[spl.length - 1];
         }
-        if(!fileName.contains("."))
+        if (!fileName.contains("."))
             return PLAIN;
         String[] spl = fileName.split("\\.");
         MimeType type = byExtension(spl[spl.length - 1]);

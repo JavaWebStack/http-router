@@ -11,9 +11,11 @@ import java.util.UUID;
 
 public class InternalWebSocketRequestHandler implements RequestHandler {
     private final WebSocketHandler handler;
-    public InternalWebSocketRequestHandler(WebSocketHandler handler){
+
+    public InternalWebSocketRequestHandler(WebSocketHandler handler) {
         this.handler = handler;
     }
+
     public Object handle(Exchange exchange) {
         String id = UUID.randomUUID().toString();
         exchange.rawResponse().setHeader("X-Server-WSID", id);

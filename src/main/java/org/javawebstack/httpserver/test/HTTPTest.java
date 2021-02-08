@@ -11,61 +11,61 @@ public abstract class HTTPTest {
     private final HTTPServer server;
     private final Map<String, String> defaultHeaders = new HashMap<>();
 
-    protected HTTPTest(HTTPServer server){
+    protected HTTPTest(HTTPServer server) {
         this.server = server;
     }
 
-    public HTTPServer getServer(){
+    public HTTPServer getServer() {
         return server;
     }
 
-    public void setDefaultHeader(String key, String value){
+    public void setDefaultHeader(String key, String value) {
         defaultHeaders.put(key, value);
     }
 
-    public void setBearerToken(String token){
-        setDefaultHeader("Authorization", "Bearer "+token);
+    public void setBearerToken(String token) {
+        setDefaultHeader("Authorization", "Bearer " + token);
     }
 
-    public TestExchange httpGet(String url){
+    public TestExchange httpGet(String url) {
         return httpRequest(HttpMethod.GET, url, null);
     }
 
-    public TestExchange httpPost(String url){
+    public TestExchange httpPost(String url) {
         return httpPost(url, null);
     }
 
-    public TestExchange httpPost(String url, Object content){
+    public TestExchange httpPost(String url, Object content) {
         return httpRequest(HttpMethod.POST, url, content);
     }
 
-    public TestExchange httpPut(String url){
+    public TestExchange httpPut(String url) {
         return httpPut(url, null);
     }
 
-    public TestExchange httpPut(String url, Object content){
+    public TestExchange httpPut(String url, Object content) {
         return httpRequest(HttpMethod.PUT, url, content);
     }
 
-    public TestExchange httpDelete(String url){
+    public TestExchange httpDelete(String url) {
         return httpDelete(url, null);
     }
 
-    public TestExchange httpDelete(String url, Object content){
+    public TestExchange httpDelete(String url, Object content) {
         return httpRequest(HttpMethod.DELETE, url, content);
     }
 
-    public TestExchange httpRequest(HttpMethod method, String url, Object content){
+    public TestExchange httpRequest(HttpMethod method, String url, Object content) {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setMethod(method);
         request.setPath(url);
         defaultHeaders.forEach(request::addHeader);
-        if(content != null){
-            if(content instanceof String){
+        if (content != null) {
+            if (content instanceof String) {
                 request.setContent((String) content);
-            }else if(content instanceof byte[]){
+            } else if (content instanceof byte[]) {
                 request.setContent((byte[]) content);
-            }else{
+            } else {
                 request.setContent(server.getGson().toJson(content));
             }
         }

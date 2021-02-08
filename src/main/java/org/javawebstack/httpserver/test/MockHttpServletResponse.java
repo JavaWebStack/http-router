@@ -14,7 +14,7 @@ public class MockHttpServletResponse implements HttpServletResponse {
     private final Map<String, String> headers = new HashMap<>();
 
     public void addCookie(Cookie cookie) {
-        
+
     }
 
     public boolean containsHeader(String s) {
@@ -94,7 +94,7 @@ public class MockHttpServletResponse implements HttpServletResponse {
     public Collection<String> getHeaders(String s) {
         String header = getHeader(s);
         Set<String> set = new HashSet<>();
-        if(header != null)
+        if (header != null)
             set.add(header);
         return set;
     }
@@ -167,11 +167,11 @@ public class MockHttpServletResponse implements HttpServletResponse {
         return null;
     }
 
-    public byte[] getContent(){
+    public byte[] getContent() {
         return outputStream.getBytes();
     }
 
-    public String getContentString(){
+    public String getContentString() {
         return outputStream.getString();
     }
 
