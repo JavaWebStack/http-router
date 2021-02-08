@@ -6,6 +6,9 @@ import org.javawebstack.httpserver.HTTPServer;
 import org.javawebstack.httpserver.helper.MimeType;
 import org.junit.jupiter.api.Assertions;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TestExchange extends Exchange {
     private MockHttpServletRequest mockReq;
     private MockHttpServletResponse mockRes;
@@ -61,6 +64,23 @@ public class TestExchange extends Exchange {
     }
     public TestExchange assertCreated(String message){
         Assertions.assertEquals(201, mockRes.getStatus(), message);
+        return this;
+    }
+    public TestExchange assertNoContent() {
+        Assertions.assertEquals(204, mockRes.getStatus());
+        return this;
+    }
+    public TestExchange assertNoContent(String message) {
+        Assertions.assertEquals(204, mockRes.getStatus(), message);
+        return this;
+    }
+    public TestExchange assertRedirect() {
+        Assertions.assertTrue(isRedirect());
+        return this;
+    }
+    public TestExchange assertRedirect(String url) {
+        Assertions.assertTrue(isRedirect());
+        Assertions.assertEquals(url, mockRes.getHeader("Location"));
         return this;
     }
     public TestExchange assertNotFound(){
@@ -202,5 +222,15 @@ public class TestExchange extends Exchange {
             return val.bool() == element.bool();
         }
         return false;
+    }
+    private boolean isRedirect() {
+        List<Integer> redirectCodes = new ArrayList<>();
+        redirectCodes.add(301);
+        redirectCodes.add(302);
+        redirectCodes.add(303);
+        redirectCodes.add(307);
+        redirectCodes.add(308);
+
+        return redirectCodes.contains(mockRes.getStatus());
     }
 }
