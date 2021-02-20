@@ -2,6 +2,7 @@ package org.javawebstack.httpserver;
 
 import org.javawebstack.abstractdata.AbstractElement;
 import org.javawebstack.abstractdata.AbstractNull;
+import org.javawebstack.abstractdata.AbstractObject;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.helper.MimeType;
 import org.javawebstack.validator.ValidationContext;
@@ -59,6 +60,9 @@ public class Exchange {
                 break;
             case X_WWW_FORM_URLENCODED:
                 request = AbstractElement.fromFormData(body);
+                break;
+            default:
+                request = new AbstractObject();
                 break;
         }
         ValidationResult result = Validator.getValidator(clazz).validate(new ValidationContext().attrib("exchange", this), request);
