@@ -2,6 +2,7 @@ package org.javawebstack.httpserver.transformer.response;
 
 import org.javawebstack.abstractdata.AbstractMapper;
 import org.javawebstack.abstractdata.NamingPolicy;
+import org.javawebstack.httpserver.Exchange;
 
 public class JsonResponseTransformer implements ResponseTransformer {
 
@@ -21,7 +22,7 @@ public class JsonResponseTransformer implements ResponseTransformer {
         return this;
     }
 
-    public String transform(Object object) {
+    public String transform(Exchange exchange, Object object) {
         if (object instanceof byte[])
             return null;
         if (ignoreStrings && object instanceof String)

@@ -403,13 +403,13 @@ public class HTTPServer implements RouteParamTransformerProvider {
                 exchange.pathVariables = null;
             }
             if (response != null)
-                exchange.write(transformResponse(response));
+                exchange.write(transformResponse(exchange, response));
             if (exchange.getMethod() != HttpMethod.WEBSOCKET)
                 exchange.close();
             return;
         } catch (Throwable ex) {
             try {
-                exchange.write(transformResponse(exceptionHandler.handle(exchange, ex)));
+                exchange.write(transformResponse(exchange, exceptionHandler.handle(exchange, ex)));
             } catch (Throwable ex2) {
                 logger.log(Level.SEVERE, ex2, () -> "An error occured in the exception handler!");
             }
@@ -437,9 +437,9 @@ public class HTTPServer implements RouteParamTransformerProvider {
         return routeAutoInjectors;
     }
 
-    public byte[] transformResponse(Object object) {
+    public byte[] transformResponse(Exchange exchange, Object object) {
         for (ResponseTransformer t : responseTransformers) {
-            byte[] res = t.transformBytes(object);
+            byte[] res = t.transformBytes(exchange, object);
             if (res != null)
                 return res;
         }
