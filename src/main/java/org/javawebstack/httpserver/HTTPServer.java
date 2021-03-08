@@ -360,9 +360,10 @@ public class HTTPServer implements RouteParamTransformerProvider {
                     }
                 }
                 for (Route route : beforeRoutes) {
-                    exchange.pathVariables = route.match(exchange);
-                    if (exchange.pathVariables == null)
+                    Map<String, Object> pathVariables = route.match(exchange);
+                    if (pathVariables == null)
                         continue;
+                    exchange.getPathVariables().putAll(pathVariables);
                     for (RequestHandler handler : route.getHandlers()) {
                         try {
                             response = handler.handle(exchange);
@@ -370,15 +371,15 @@ public class HTTPServer implements RouteParamTransformerProvider {
                             response = exceptionHandler.handle(exchange, ex);
                         }
                     }
-                    exchange.pathVariables = null;
                 }
-                exchange.pathVariables = null;
+                exchange.getPathVariables().clear();
                 if (response == null) {
                     routes:
                     for (Route route : routes) {
-                        exchange.pathVariables = route.match(exchange);
-                        if (exchange.pathVariables == null)
+                        Map<String, Object> pathVariables = route.match(exchange);
+                        if (pathVariables == null)
                             continue;
+                        exchange.getPathVariables().putAll(pathVariables);
                         for (RequestHandler handler : route.getHandlers()) {
                             response = handler.handle(exchange);
                             if (exchange.getMethod() == HttpMethod.WEBSOCKET)
@@ -386,7 +387,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
                             if (response != null)
                                 break routes;
                         }
-                        exchange.pathVariables = null;
+                        exchange.getPathVariables().clear();
                     }
                 }
             } catch (Throwable ex) {
@@ -394,14 +395,15 @@ public class HTTPServer implements RouteParamTransformerProvider {
             }
             if (response == null)
                 response = notFoundHandler.handle(exchange);
-            exchange.pathVariables = null;
+            exchange.getPathVariables().clear();
             for (Route route : afterRoutes) {
-                exchange.pathVariables = route.match(exchange);
-                if (exchange.pathVariables == null)
+                Map<String, Object> pathVariables = route.match(exchange);
+                if (pathVariables == null)
                     continue;
+                exchange.getPathVariables().putAll(pathVariables);
                 for (AfterRequestHandler handler : route.getAfterHandlers())
                     response = handler.handleAfter(exchange, response);
-                exchange.pathVariables = null;
+                exchange.getPathVariables().clear();
             }
             if (response != null)
                 exchange.write(transformResponse(exchange, response));

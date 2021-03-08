@@ -25,8 +25,8 @@ public class Exchange {
     private final HttpMethod method;
     private final String path;
     private byte[] body = null;
-    public Map<String, Object> pathVariables;
-    public final Map<String, String> parameters = new HashMap<>();
+    private final Map<String, Object> pathVariables = new HashMap<>();
+    private final AbstractObject queryParameters;
     private final HttpServletRequest request;
     private final HttpServletResponse response;
     private final Map<String, Object> attributes = new HashMap<>();
@@ -36,7 +36,8 @@ public class Exchange {
         this.request = request;
         this.response = response;
         this.path = request.getPathInfo();
-        method = "websocket".equalsIgnoreCase(request.getHeader("Upgrade")) ? HttpMethod.WEBSOCKET : HttpMethod.valueOf(request.getMethod());
+        this.method = "websocket".equalsIgnoreCase(request.getHeader("Upgrade")) ? HttpMethod.WEBSOCKET : HttpMethod.valueOf(request.getMethod());
+        this.queryParameters = AbstractElement.fromFormData(request.getQueryString()).object();
     }
 
     public <T> T body(Class<T> clazz) {
@@ -211,6 +212,22 @@ public class Exchange {
     public Exchange attrib(String key, Object value) {
         attributes.put(key, value);
         return this;
+    }
+
+    public <T> T path(String name) {
+        return (T) pathVariables.get(name);
+    }
+
+    public AbstractElement query(String name) {
+        return queryParameters.get(name);
+    }
+
+    public Map<String, Object> getPathVariables() {
+        return pathVariables;
+    }
+
+    public AbstractObject getQueryParameters() {
+        return queryParameters;
     }
 
     public String bearerAuth() {

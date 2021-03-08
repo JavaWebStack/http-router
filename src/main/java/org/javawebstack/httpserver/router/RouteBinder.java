@@ -177,12 +177,12 @@ public class RouteBinder {
                 }
                 if (parameterTypes[i] instanceof Query) {
                     Query query = (Query) parameterTypes[i];
-                    args[i] = exchange.parameters.get(query.value());
+                    args[i] = exchange.path(query.value());
                     continue;
                 }
                 if (parameterTypes[i] instanceof Path) {
                     Path path = (Path) parameterTypes[i];
-                    args[i] = exchange.pathVariables.get(path.value().toLowerCase(Locale.ROOT));
+                    args[i] = exchange.path(path.value().toLowerCase(Locale.ROOT));
                     continue;
                 }
                 for (RouteAutoInjector autoInjector : service.getRouteAutoInjectors()) {
