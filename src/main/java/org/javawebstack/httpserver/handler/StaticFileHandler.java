@@ -19,7 +19,7 @@ public class StaticFileHandler implements RequestHandler {
     }
 
     public Object handle(Exchange exchange) {
-        String path = (String) exchange.pathVariables.get("path");
+        String path = exchange.path("path");
         InputStream stream = null;
         for (FileProvider provider : providers) {
             stream = provider.getFile(path);
