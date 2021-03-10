@@ -48,7 +48,14 @@ public class Exchange {
         String body = new String(this.body, StandardCharsets.UTF_8);
         if (clazz == String.class)
             return (T) body;
-        MimeType type = MimeType.byMimeType(getContentType());
+
+        String contentType = getContentType().toLowerCase();
+
+        if (contentType.contains(";")) {
+            contentType = contentType.split(";")[0].trim();
+        }
+
+        MimeType type = MimeType.byMimeType(contentType);
         if (type == null)
             type = MimeType.JSON;
         AbstractElement request = AbstractNull.INSTANCE;
