@@ -52,7 +52,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private final List<RequestInterceptor> beforeInterceptors = new ArrayList<>();
     private Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setDateFormat("yyyy-MM-dd HH:mm:ss").disableHtmlEscaping().create();
-    private AbstractMapper abstractMapper = new AbstractMapper().setNamingPolicy(NamingPolicy.CAMEL_CASE);
+    private AbstractMapper abstractMapper = new AbstractMapper().setNamingPolicy(NamingPolicy.SNAKE_CASE);
     private Injector injector = null;
     private org.eclipse.jetty.websocket.server.WebSocketHandler webSocketHandler;
     private List<RouteAutoInjector> routeAutoInjectors = new ArrayList<>();
