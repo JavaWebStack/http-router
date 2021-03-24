@@ -359,6 +359,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
                         return;
                     }
                 }
+                middlewares:
                 for (Route route : beforeRoutes) {
                     Map<String, Object> pathVariables = route.match(exchange);
                     if (pathVariables == null)
@@ -370,6 +371,8 @@ public class HTTPServer implements RouteParamTransformerProvider {
                         } catch (Throwable ex) {
                             response = exceptionHandler.handle(exchange, ex);
                         }
+                        if(response != null)
+                            break middlewares;
                     }
                 }
                 exchange.getPathVariables().clear();
