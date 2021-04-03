@@ -79,6 +79,10 @@ public class RouteBinder {
             RequestHandler before = server.getBeforeMiddleware(name);
             AfterRequestHandler after = server.getAfterMiddleware(name);
             for (String prefix : prefixes) {
+                if (before == null && after == null) {
+                    server.getLogger().warning("Middleware \"" + name + "\" not found!");
+                    continue;
+                }
                 if (before != null)
                     server.beforeRoute(method, buildPattern(globalPrefix, prefix, path), before);
                 if (after != null)
