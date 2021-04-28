@@ -190,8 +190,6 @@ public class RouteBinder {
                     if (args[i] != null)
                         break;
                 }
-                if (args[i] == null && service.getInjector() != null)
-                    args[i] = service.getInjector().getInstance((Class<?>) parameterTypes[i]);
             }
             try {
                 return method.invoke(controller, args);

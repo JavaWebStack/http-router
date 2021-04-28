@@ -25,7 +25,6 @@ import org.javawebstack.httpserver.util.DirectoryFileProvider;
 import org.javawebstack.httpserver.util.ResourceFileProvider;
 import org.javawebstack.httpserver.websocket.InternalWebSocketAdapter;
 import org.javawebstack.httpserver.websocket.InternalWebSocketRequestHandler;
-import org.javawebstack.injector.Injector;
 import org.reflections.Reflections;
 
 import javax.servlet.http.HttpServletRequest;
@@ -50,10 +49,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private Server server;
     private int port = 80;
     private final List<RequestInterceptor> beforeInterceptors = new ArrayList<>();
-    private Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .setDateFormat("yyyy-MM-dd HH:mm:ss").disableHtmlEscaping().create();
     private AbstractMapper abstractMapper = new AbstractMapper().setNamingPolicy(NamingPolicy.SNAKE_CASE);
-    private Injector injector = null;
     private org.eclipse.jetty.websocket.server.WebSocketHandler webSocketHandler;
     private List<RouteAutoInjector> routeAutoInjectors = new ArrayList<>();
     private final Map<String, RequestHandler> beforeMiddleware = new HashMap<>();
@@ -83,15 +79,11 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer beforeInterceptor(RequestInterceptor handler) {
-        if (injector != null)
-            injector.inject(handler);
         beforeInterceptors.add(handler);
         return this;
     }
 
     public HTTPServer routeAutoInjector(RouteAutoInjector injector) {
-        if (this.injector != null)
-            this.injector.inject(injector);
         routeAutoInjectors.add(injector);
         return this;
     }
@@ -153,8 +145,6 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer staticHandler(String pathPrefix, StaticFileHandler handler) {
-        if (injector != null)
-            injector.inject(handler);
         return get(pathPrefix + (pathPrefix.endsWith("/") ? "" : "/") + "{*:path}", handler);
     }
 
@@ -167,28 +157,16 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer route(HttpMethod method, String pattern, RequestHandler... handlers) {
-        if (injector != null) {
-            for (RequestHandler handler : handlers)
-                injector.inject(handler);
-        }
         routes.add(new Route(this, method, pattern, Arrays.asList(handlers)));
         return this;
     }
 
     public HTTPServer beforeRoute(HttpMethod method, String pattern, RequestHandler... handlers) {
-        if (injector != null) {
-            for (RequestHandler handler : handlers)
-                injector.inject(handler);
-        }
         beforeRoutes.add(new Route(this, method, pattern, Arrays.asList(handlers)));
         return this;
     }
 
     public HTTPServer afterRoute(HttpMethod method, String pattern, AfterRequestHandler... handlers) {
-        if (injector != null) {
-            for (AfterRequestHandler handler : handlers)
-                injector.inject(handler);
-        }
         afterRoutes.add(new Route(this, method, pattern, null).setAfterHandlers(Arrays.asList(handlers)));
         return this;
     }
@@ -224,49 +202,35 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer webSocket(String pattern, WebSocketHandler handler) {
-        if (injector != null)
-            injector.inject(handler);
         return route(HttpMethod.WEBSOCKET, pattern, new InternalWebSocketRequestHandler(handler));
     }
 
     public HTTPServer middleware(String name, RequestHandler handler) {
-        if (injector != null)
-            injector.inject(handler);
         beforeMiddleware.put(name, handler);
         return this;
     }
 
     public HTTPServer middleware(String name, AfterRequestHandler handler) {
-        if (injector != null)
-            injector.inject(handler);
         afterMiddleware.put(name, handler);
         return this;
     }
 
     public HTTPServer notFound(RequestHandler handler) {
-        if (injector != null)
-            injector.inject(handler);
         notFoundHandler = handler;
         return this;
     }
 
     public HTTPServer routeParamTransformer(RouteParamTransformer transformer) {
-        if (injector != null)
-            injector.inject(transformer);
         routeParamTransformers.add(transformer);
         return this;
     }
 
     public HTTPServer responseTransformer(ResponseTransformer transformer) {
-        if (injector != null)
-            injector.inject(transformer);
         responseTransformers.add(transformer);
         return this;
     }
 
     public HTTPServer exceptionHandler(ExceptionHandler handler) {
-        if (injector != null)
-            injector.inject(handler);
         exceptionHandler = handler;
         return this;
     }
@@ -292,19 +256,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer controller(String globalPrefix, Object controller) {
-        if (injector != null)
-            injector.inject(controller);
         routeBinder.bind(globalPrefix, controller);
-        return this;
-    }
-
-    public HTTPServer injector(Injector injector) {
-        this.injector = injector;
-        return this;
-    }
-
-    public HTTPServer gson(Gson gson) {
-        this.gson = gson;
         return this;
     }
 
@@ -450,14 +402,6 @@ public class HTTPServer implements RouteParamTransformerProvider {
                 return res;
         }
         return object.toString().getBytes(StandardCharsets.UTF_8);
-    }
-
-    public Gson getGson() {
-        return gson;
-    }
-
-    public Injector getInjector() {
-        return injector;
     }
 
     private class HttpHandler extends AbstractHandler {

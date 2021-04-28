@@ -66,7 +66,7 @@ public abstract class HTTPTest {
             } else if (content instanceof byte[]) {
                 request.setContent((byte[]) content);
             } else {
-                request.setContent(server.getGson().toJson(content));
+                request.setContent(server.getAbstractMapper().toAbstract(content).toJsonString());
             }
         }
         MockHttpServletResponse response = new MockHttpServletResponse();
