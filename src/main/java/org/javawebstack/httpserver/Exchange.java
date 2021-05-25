@@ -43,11 +43,15 @@ public class Exchange {
     public <T> T body(Class<T> clazz) {
         if (body == null)
             body = read();
+        if(body == null)
+            body = new byte[0];
         if (clazz == byte[].class)
             return (T) body;
         String body = new String(this.body, StandardCharsets.UTF_8);
         if (clazz == String.class)
             return (T) body;
+        if(body.length() == 0)
+            body = "{}";
 
         String contentType = getContentType().toLowerCase();
 
@@ -92,7 +96,7 @@ public class Exchange {
     }
 
     public String getContentType() {
-        return request.getContentType();
+        return request.getContentType() != null ? request.getContentType() : "";
     }
 
     public byte[] read() {
