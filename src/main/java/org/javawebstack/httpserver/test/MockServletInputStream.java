@@ -27,6 +27,10 @@ public class MockServletInputStream extends ServletInputStream {
         return true;
     }
 
+    public int available() {
+        return inputStream.available();
+    }
+
     public void setReadListener(ReadListener readListener) {
 
     }

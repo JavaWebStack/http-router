@@ -195,7 +195,7 @@ public class MockHttpServletRequest implements HttpServletRequest {
     }
 
     public long getContentLengthLong() {
-        return 0;
+        return getContentLength();
     }
 
     public String getContentType() {
