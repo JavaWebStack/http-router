@@ -11,15 +11,21 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class RouteBinder {
 
     private final HTTPServer server;
+    public final static Map<Class<?>, HttpMethod> HTTP_METHOD_ANNOTATIONS_MAP = new HashMap(){{
+        put(Get.class, HttpMethod.GET);
+        put(Patch.class, HttpMethod.PATCH);
+        put(Put.class, HttpMethod.PUT);
+        put(Post.class, HttpMethod.POST);
+        put(Delete.class, HttpMethod.DELETE);
+        put(Options.class, HttpMethod.OPTIONS);
+        put(Trace.class, HttpMethod.TRACE);
+    }};
 
     public RouteBinder(HTTPServer server) {
         this.server = server;
@@ -47,22 +53,14 @@ public class RouteBinder {
                 middlewares.addAll(Arrays.asList(with.value()));
             if (methodWith != null)
                 middlewares.addAll(Arrays.asList(methodWith.value()));
-            for (Get a : getAnnotations(Get.class, method)) {
-                bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.GET, a.value()));
-            }
-            for (Post a : getAnnotations(Post.class, method)) {
-                bindMiddlewares(HttpMethod.POST, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.POST, a.value()));
-            }
-            for (Put a : getAnnotations(Put.class, method)) {
-                bindMiddlewares(HttpMethod.PUT, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.PUT, a.value()));
-            }
-            for (Delete a : getAnnotations(Delete.class, method)) {
-                bindMiddlewares(HttpMethod.DELETE, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.DELETE, a.value()));
-            }
+
+            HTTP_METHOD_ANNOTATIONS_MAP.forEach((clazz, httpMethod) -> {
+                for (Get annotation : getAnnotations(Get.class, method)) {
+                    bindMiddlewares(httpMethod, globalPrefix, prefixes, annotation.value(), middlewares);
+                    binds.add(new Bind(httpMethod, annotation.value()));
+                }
+            });
+
             if (binds.size() > 0) {
                 BindHandler handler = new BindHandler(server, controller, method);
                 for (String prefix : prefixes) {
