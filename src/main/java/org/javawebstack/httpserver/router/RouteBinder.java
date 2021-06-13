@@ -53,37 +53,30 @@ public class RouteBinder {
                     binds.add(new Bind(HttpMethod.GET, s));
                 }
             }
-
             for (Post a : getAnnotations(Post.class, method)) {
                 for (String s : a.value()) {
                     bindMiddlewares(HttpMethod.POST, globalPrefix, prefixes, s, middlewares);
                     binds.add(new Bind(HttpMethod.POST, s));
                 }
             }
-
             for (Put a : getAnnotations(Put.class, method)) {
                 for (String s : a.value()) {
                     bindMiddlewares(HttpMethod.PUT, globalPrefix, prefixes, s, middlewares);
                     binds.add(new Bind(HttpMethod.PUT, s));
                 }
             }
-
-
             for (Delete a : getAnnotations(Delete.class, method)) {
                 for (String s : a.value()) {
                     bindMiddlewares(HttpMethod.DELETE, globalPrefix, prefixes, s, middlewares);
                     binds.add(new Bind(HttpMethod.DELETE, s));
                 }
             }
-
-
             for (Patch a : getAnnotations(Patch.class, method)) {
                 for (String s : a.value()) {
                     bindMiddlewares(HttpMethod.PATCH, globalPrefix, prefixes, s, middlewares);
                     binds.add(new Bind(HttpMethod.PATCH, s));
                 }
             }
-
             for (Trace a : getAnnotations(Trace.class, method)) {
                 for (String s : a.value()) {
                     bindMiddlewares(HttpMethod.TRACE, globalPrefix, prefixes, s, middlewares);
@@ -199,29 +192,24 @@ public class RouteBinder {
             for (int i = 0; i < args.length; i++) {
                 if (parameterTypes[i] == null)
                     continue;
+
                 if (parameterTypes[i] instanceof Body) {
                     args[i] = exchange.body(method.getParameterTypes()[i]);
-                    continue;
-                }
-                if (parameterTypes[i] instanceof Attrib) {
+                } else if (parameterTypes[i] instanceof Attrib) {
                     Attrib attrib = (Attrib) parameterTypes[i];
                     args[i] = exchange.attrib(attrib.value());
-                    continue;
-                }
-                if (parameterTypes[i] instanceof Query) {
+                } else if (parameterTypes[i] instanceof Query) {
                     Query query = (Query) parameterTypes[i];
                     args[i] = exchange.path(query.value());
-                    continue;
-                }
-                if (parameterTypes[i] instanceof Path) {
+                } else if (parameterTypes[i] instanceof Path) {
                     Path path = (Path) parameterTypes[i];
                     args[i] = exchange.path(path.value().toLowerCase(Locale.ROOT));
-                    continue;
-                }
-                for (RouteAutoInjector autoInjector : service.getRouteAutoInjectors()) {
-                    args[i] = autoInjector.getValue(exchange, (Class<?>) parameterTypes[i]);
-                    if (args[i] != null)
-                        break;
+                } else {
+                    for (RouteAutoInjector autoInjector : service.getRouteAutoInjectors()) {
+                        args[i] = autoInjector.getValue(exchange, (Class<?>) parameterTypes[i]);
+                        if (args[i] != null)
+                            break;
+                    }
                 }
             }
             try {
