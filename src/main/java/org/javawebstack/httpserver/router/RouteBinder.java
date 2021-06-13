@@ -45,26 +45,53 @@ public class RouteBinder {
             if (methodWith != null)
                 middlewares.addAll(Arrays.asList(methodWith.value()));
 
-
-
+            // Registering HTTP-Method annotations.
+            //region Registering HTTP-Method Annotations
             for (Get a : getAnnotations(Get.class, method)) {
                 for (String s : a.value()) {
                     bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, s, middlewares);
                     binds.add(new Bind(HttpMethod.GET, s));
                 }
             }
+
             for (Post a : getAnnotations(Post.class, method)) {
-                bindMiddlewares(HttpMethod.POST, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.POST, a.value()));
+                for (String s : a.value()) {
+                    bindMiddlewares(HttpMethod.POST, globalPrefix, prefixes, s, middlewares);
+                    binds.add(new Bind(HttpMethod.POST, s));
+                }
             }
+
             for (Put a : getAnnotations(Put.class, method)) {
-                bindMiddlewares(HttpMethod.PUT, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.PUT, a.value()));
+                for (String s : a.value()) {
+                    bindMiddlewares(HttpMethod.PUT, globalPrefix, prefixes, s, middlewares);
+                    binds.add(new Bind(HttpMethod.PUT, s));
+                }
             }
+
+
             for (Delete a : getAnnotations(Delete.class, method)) {
-                bindMiddlewares(HttpMethod.DELETE, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.DELETE, a.value()));
+                for (String s : a.value()) {
+                    bindMiddlewares(HttpMethod.DELETE, globalPrefix, prefixes, s, middlewares);
+                    binds.add(new Bind(HttpMethod.DELETE, s));
+                }
             }
+
+
+            for (Patch a : getAnnotations(Patch.class, method)) {
+                for (String s : a.value()) {
+                    bindMiddlewares(HttpMethod.PATCH, globalPrefix, prefixes, s, middlewares);
+                    binds.add(new Bind(HttpMethod.PATCH, s));
+                }
+            }
+
+            for (Trace a : getAnnotations(Trace.class, method)) {
+                for (String s : a.value()) {
+                    bindMiddlewares(HttpMethod.TRACE, globalPrefix, prefixes, s, middlewares);
+                    binds.add(new Bind(HttpMethod.TRACE, s));
+                }
+            }
+            //endregion
+
             if (binds.size() > 0) {
                 BindHandler handler = new BindHandler(server, controller, method);
                 for (String prefix : prefixes) {
