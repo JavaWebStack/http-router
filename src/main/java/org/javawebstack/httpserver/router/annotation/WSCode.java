@@ -6,14 +6,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface Trace {
-    String value() default "/";
-
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.METHOD)
-    @interface Multiple {
-        Get[] value();
-    }
-
+@Target(ElementType.PARAMETER)
+public @interface WSCode {
 }

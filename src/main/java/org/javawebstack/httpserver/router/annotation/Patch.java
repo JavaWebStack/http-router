@@ -1,12 +1,17 @@
 package org.javawebstack.httpserver.router.annotation;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
+@Repeatable(Patch.Multiple.class)
 public @interface Patch {
-    String[] value() default "/";
+    String value() default "/";
+
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target(ElementType.METHOD)
+    @interface Multiple {
+        Patch[] value();
+    }
+
 }

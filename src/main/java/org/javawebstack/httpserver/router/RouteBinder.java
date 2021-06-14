@@ -4,8 +4,10 @@ import org.javawebstack.httpserver.Exchange;
 import org.javawebstack.httpserver.HTTPServer;
 import org.javawebstack.httpserver.handler.AfterRequestHandler;
 import org.javawebstack.httpserver.handler.RequestHandler;
+import org.javawebstack.httpserver.handler.WebSocketHandler;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.router.annotation.*;
+import org.javawebstack.httpserver.websocket.WebSocket;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
@@ -36,6 +38,7 @@ public class RouteBinder {
                 this.path = path;
             }
         }
+        Map<String, WebSocketBindHandler> websocketHandlers = new HashMap<>();
         for (Method method : controller.getClass().getDeclaredMethods()) {
             List<Bind> binds = new ArrayList<>();
             With methodWith = getAnnotations(With.class, method).stream().findFirst().orElse(null);
@@ -48,40 +51,69 @@ public class RouteBinder {
             // Registering HTTP-Method annotations.
             //region Registering HTTP-Method Annotations
             for (Get a : getAnnotations(Get.class, method)) {
-                for (String s : a.value()) {
-                    bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, s, middlewares);
-                    binds.add(new Bind(HttpMethod.GET, s));
-                }
+                bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HttpMethod.GET, a.value()));
             }
             for (Post a : getAnnotations(Post.class, method)) {
-                for (String s : a.value()) {
-                    bindMiddlewares(HttpMethod.POST, globalPrefix, prefixes, s, middlewares);
-                    binds.add(new Bind(HttpMethod.POST, s));
-                }
+                bindMiddlewares(HttpMethod.POST, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HttpMethod.POST, a.value()));
             }
             for (Put a : getAnnotations(Put.class, method)) {
-                for (String s : a.value()) {
-                    bindMiddlewares(HttpMethod.PUT, globalPrefix, prefixes, s, middlewares);
-                    binds.add(new Bind(HttpMethod.PUT, s));
-                }
+                bindMiddlewares(HttpMethod.PUT, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HttpMethod.PUT, a.value()));
             }
             for (Delete a : getAnnotations(Delete.class, method)) {
-                for (String s : a.value()) {
-                    bindMiddlewares(HttpMethod.DELETE, globalPrefix, prefixes, s, middlewares);
-                    binds.add(new Bind(HttpMethod.DELETE, s));
-                }
+                bindMiddlewares(HttpMethod.DELETE, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HttpMethod.DELETE, a.value()));
             }
             for (Patch a : getAnnotations(Patch.class, method)) {
-                for (String s : a.value()) {
-                    bindMiddlewares(HttpMethod.PATCH, globalPrefix, prefixes, s, middlewares);
-                    binds.add(new Bind(HttpMethod.PATCH, s));
-                }
+                bindMiddlewares(HttpMethod.PATCH, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HttpMethod.PATCH, a.value()));
             }
             for (Trace a : getAnnotations(Trace.class, method)) {
-                for (String s : a.value()) {
-                    bindMiddlewares(HttpMethod.TRACE, globalPrefix, prefixes, s, middlewares);
-                    binds.add(new Bind(HttpMethod.TRACE, s));
+                bindMiddlewares(HttpMethod.TRACE, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HttpMethod.TRACE, a.value()));
+            }
+            for (Options a : getAnnotations(Options.class, method)) {
+                bindMiddlewares(HttpMethod.OPTIONS, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HttpMethod.OPTIONS, a.value()));
+            }
+            for (Head a : getAnnotations(Head.class, method)) {
+                bindMiddlewares(HttpMethod.HEAD, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HttpMethod.HEAD, a.value()));
+            }
+            for (WebSocketMessage a : getAnnotations(WebSocketMessage.class, method)) {
+                WebSocketBindHandler handler = websocketHandlers.get(a.name());
+                if(handler == null) {
+                    bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
+                    handler = new WebSocketBindHandler();
+                    for (String prefix : prefixes)
+                        server.webSocket(buildPattern(globalPrefix, prefix, a.value()), handler);
+                    websocketHandlers.put(a.name(), handler);
                 }
+                handler.messageHandler = new BindMapper(server, controller, method);
+            }
+            for (WebSocketConnect a : getAnnotations(WebSocketConnect.class, method)) {
+                WebSocketBindHandler handler = websocketHandlers.get(a.name());
+                if(handler == null) {
+                    bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
+                    handler = new WebSocketBindHandler();
+                    for (String prefix : prefixes)
+                        server.webSocket(buildPattern(globalPrefix, prefix, a.value()), handler);
+                    websocketHandlers.put(a.name(), handler);
+                }
+                handler.connectHandler = new BindMapper(server, controller, method);
+            }
+            for (WebSocketClose a : getAnnotations(WebSocketClose.class, method)) {
+                WebSocketBindHandler handler = websocketHandlers.get(a.name());
+                if(handler == null) {
+                    bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
+                    handler = new WebSocketBindHandler();
+                    for (String prefix : prefixes)
+                        server.webSocket(buildPattern(globalPrefix, prefix, a.value()), handler);
+                    websocketHandlers.put(a.name(), handler);
+                }
+                handler.closeHandler = new BindMapper(server, controller, method);
             }
             //endregion
 
@@ -148,65 +180,62 @@ public class RouteBinder {
         return annotations.length == 0 ? null : annotations[0];
     }
 
-    private static class BindHandler implements RequestHandler {
+    private static class BindMapper {
 
-        private final HTTPServer service;
+        private final HTTPServer server;
         private final Object controller;
         private final Method method;
-        private final Object[] parameterTypes;
+        private final Object[] parameterAnnotations;
+        private final Class<?>[] parameterTypes;
+        private final String[] defaultValues;
 
-        public BindHandler(HTTPServer service, Object controller, Method method) {
-            this.service = service;
+        public BindMapper(HTTPServer server, Object controller, Method method) {
+            this.server = server;
             this.controller = controller;
             this.method = method;
             method.setAccessible(true);
-            Class<?>[] types = method.getParameterTypes();
-            parameterTypes = new Object[types.length];
-            for (int i = 0; i < parameterTypes.length; i++) {
-                Attrib attrib = getAnnotation(Attrib.class, method, i);
-                if (attrib != null) {
-                    parameterTypes[i] = attrib;
-                    continue;
+            parameterTypes = method.getParameterTypes();
+            parameterAnnotations = new Object[parameterTypes.length];
+            defaultValues = new String[parameterTypes.length];
+            for (int i = 0; i < parameterAnnotations.length; i++) {
+                DefaultValue defaultValue = getAnnotation(DefaultValue.class, method, i);
+                if(defaultValue != null)
+                    defaultValues[i] = defaultValue.value();
+                for(Class<? extends Annotation> annotation : new Class[]{ Attrib.class, Query.class, Body.class, Path.class, WSMessage.class, WSCode.class, WSReason.class }) {
+                    parameterAnnotations[i] = getAnnotation(annotation, method, i);
+                    if(parameterAnnotations[i] != null)
+                        continue;
                 }
-                Query query = getAnnotation(Query.class, method, i);
-                if (query != null) {
-                    parameterTypes[i] = query;
-                    continue;
-                }
-                Body body = getAnnotation(Body.class, method, i);
-                if (body != null) {
-                    parameterTypes[i] = body;
-                    continue;
-                }
-                Path pathParam = getAnnotation(Path.class, method, i);
-                if (pathParam != null) {
-                    parameterTypes[i] = pathParam;
-                    continue;
-                }
-                parameterTypes[i] = types[i];
+                parameterAnnotations[i] = parameterTypes[i];
             }
         }
 
-        public Object handle(Exchange exchange) {
-            Object[] args = new Object[parameterTypes.length];
+        public Object invoke(Exchange exchange, Map<String, Object> extraArgs) {
+            Object[] args = new Object[parameterAnnotations.length];
             for (int i = 0; i < args.length; i++) {
-                if (parameterTypes[i] == null)
+                Object a = parameterAnnotations[i];
+                if (a == null)
                     continue;
-
-                if (parameterTypes[i] instanceof Body) {
+                if (a instanceof Body) {
                     args[i] = exchange.body(method.getParameterTypes()[i]);
-                } else if (parameterTypes[i] instanceof Attrib) {
-                    Attrib attrib = (Attrib) parameterTypes[i];
+                } else if (a instanceof Attrib) {
+                    Attrib attrib = (Attrib) parameterAnnotations[i];
                     args[i] = exchange.attrib(attrib.value());
-                } else if (parameterTypes[i] instanceof Query) {
-                    Query query = (Query) parameterTypes[i];
-                    args[i] = exchange.path(query.value());
-                } else if (parameterTypes[i] instanceof Path) {
-                    Path path = (Path) parameterTypes[i];
+                } else if (a instanceof Query) {
+                    Query query = (Query) parameterAnnotations[i];
+                    args[i] = exchange.query(query.value(), (Class) parameterTypes[i], defaultValues[i]);
+                } else if (a instanceof Path) {
+                    Path path = (Path) parameterAnnotations[i];
                     args[i] = exchange.path(path.value().toLowerCase(Locale.ROOT));
+                } else if (a instanceof WSMessage) {
+                    args[i] = extraArgs.get("websocketMessage");
+                } else if (a instanceof WSCode) {
+                    args[i] = extraArgs.get("websocketCode");
+                } else if (a instanceof WSReason) {
+                    args[i] = extraArgs.get("websocketReason");
                 } else {
-                    for (RouteAutoInjector autoInjector : service.getRouteAutoInjectors()) {
-                        args[i] = autoInjector.getValue(exchange, (Class<?>) parameterTypes[i]);
+                    for (RouteAutoInjector autoInjector : server.getRouteAutoInjectors()) {
+                        args[i] = autoInjector.getValue(exchange, extraArgs, (Class<?>) parameterTypes[i]);
                         if (args[i] != null)
                             break;
                     }
@@ -217,6 +246,44 @@ public class RouteBinder {
             } catch (IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException(e.getCause());
             }
+        }
+
+    }
+
+    private static class WebSocketBindHandler implements WebSocketHandler {
+        BindMapper messageHandler;
+        BindMapper connectHandler;
+        BindMapper closeHandler;
+        public void onConnect(WebSocket socket) {
+            if(connectHandler != null)
+                connectHandler.invoke(socket.getExchange(), new HashMap<String, Object>(){{
+                    put("websocket", socket);
+                }});
+        }
+        public void onMessage(WebSocket socket, String message) {
+            if(messageHandler != null)
+                messageHandler.invoke(socket.getExchange(), new HashMap<String, Object>(){{
+                    put("websocket", socket);
+                    put("websocketMessage", message);
+                }});
+        }
+        public void onClose(WebSocket socket, int code, String reason) {
+            if(closeHandler != null)
+                closeHandler.invoke(socket.getExchange(), new HashMap<String, Object>(){{
+                    put("websocket", socket);
+                    put("websocketCode", code);
+                    put("websocketReason", reason);
+                }});
+        }
+    }
+
+    private static class BindHandler implements RequestHandler {
+        private final BindMapper handler;
+        public BindHandler(HTTPServer server, Object controller, Method method) {
+            handler = new BindMapper(server, controller, method);
+        }
+        public Object handle(Exchange exchange) {
+            return handler.invoke(exchange, new HashMap<>());
         }
     }
 

@@ -4,14 +4,14 @@ import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-@Repeatable(Put.Multiple.class)
-public @interface Put {
+@Repeatable(WebSocketMessage.Multiple.class)
+public @interface WebSocketMessage {
     String value() default "/";
+    String name() default "";
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     @interface Multiple {
-        Put[] value();
+        WebSocketMessage[] value();
     }
-
 }

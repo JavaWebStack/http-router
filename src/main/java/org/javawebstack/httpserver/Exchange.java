@@ -1,6 +1,7 @@
 package org.javawebstack.httpserver;
 
 import org.javawebstack.abstractdata.AbstractElement;
+import org.javawebstack.abstractdata.AbstractMapper;
 import org.javawebstack.abstractdata.AbstractNull;
 import org.javawebstack.abstractdata.AbstractObject;
 import org.javawebstack.httpserver.helper.HttpMethod;
@@ -229,8 +230,27 @@ public class Exchange {
         return (T) pathVariables.get(name);
     }
 
-    public AbstractElement query(String name) {
-        return queryParameters.get(name);
+    public String query(String name) {
+        return queryParameters.string(name, null);
+    }
+
+    public String query(String name, String defaultValue) {
+        return queryParameters.string(name, defaultValue);
+    }
+
+    public <T> T query(String name, Class<T> type) {
+        return query(name, type, null);
+    }
+
+    public <T> T query(String name, Class<T> type, T defaultValue) {
+        T t = new AbstractMapper().fromAbstract(queryParameters.get(name, AbstractNull.INSTANCE), type);
+        if(t == null)
+            return defaultValue;
+        return t;
+    }
+
+    public String remoteAddr() {
+        return request.getRemoteAddr();
     }
 
     public Map<String, Object> getPathVariables() {
