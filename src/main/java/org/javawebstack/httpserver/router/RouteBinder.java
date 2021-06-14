@@ -7,6 +7,8 @@ import org.javawebstack.httpserver.handler.RequestHandler;
 import org.javawebstack.httpserver.handler.WebSocketHandler;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.router.annotation.*;
+import org.javawebstack.httpserver.router.annotation.params.*;
+import org.javawebstack.httpserver.router.annotation.verbs.*;
 import org.javawebstack.httpserver.websocket.WebSocket;
 
 import java.lang.annotation.Annotation;

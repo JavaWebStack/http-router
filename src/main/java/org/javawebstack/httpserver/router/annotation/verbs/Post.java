@@ -1,17 +1,17 @@
-package org.javawebstack.httpserver.router.annotation;
+package org.javawebstack.httpserver.router.annotation.verbs;
 
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-@Repeatable(Get.Multiple.class)
-public @interface Get {
+@Repeatable(Post.Multiple.class)
+public @interface Post {
     String value() default "/";
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     @interface Multiple {
-        Get[] value();
+        Post[] value();
     }
 
 }

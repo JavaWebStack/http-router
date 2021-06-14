@@ -1,4 +1,4 @@
-package org.javawebstack.httpserver.router.annotation;
+package org.javawebstack.httpserver.router.annotation.params;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,6 +7,5 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
-public @interface Attrib {
-    String value();
+public @interface WSMessage {
 }

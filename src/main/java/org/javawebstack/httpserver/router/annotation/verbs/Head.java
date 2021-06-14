@@ -1,4 +1,4 @@
-package org.javawebstack.httpserver.router.annotation;
+package org.javawebstack.httpserver.router.annotation.verbs;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

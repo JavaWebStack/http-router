@@ -1,17 +1,17 @@
-package org.javawebstack.httpserver.router.annotation;
+package org.javawebstack.httpserver.router.annotation.verbs;
 
 import java.lang.annotation.*;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-@Repeatable(WebSocketClose.Multiple.class)
-public @interface WebSocketClose {
+@Repeatable(WebSocketMessage.Multiple.class)
+public @interface WebSocketMessage {
     String value() default "/";
     String name() default "";
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
     @interface Multiple {
-        WebSocketClose[] value();
+        WebSocketMessage[] value();
     }
 }
