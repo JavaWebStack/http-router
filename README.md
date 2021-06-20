@@ -12,7 +12,11 @@ JWS HTTP Routing Library
 ![Twitter Follow](https://img.shields.io/twitter/follow/JavaWebStack?style=social)
 
 ## Introduction
-This library provides a routing and request mapping stack on top of the well known and industry proven eclipse jetty http server. It also supports websockets.
+
+This library provides a routing and request mapping stack on top of the well known and industry proven eclipse jetty
+http server. It also supports websockets.
 
 ## Documentation
-You can find the current docs on our [website](https://docs.javawebstack.org/framework/httpserver). This is a work-in-progress project though so it's not yet complete.
+
+You can find the current docs on our [website](https://docs.javawebstack.org/framework/httpserver). This is a
+work-in-progress project though so it's not yet complete.

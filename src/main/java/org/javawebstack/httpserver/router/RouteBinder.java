@@ -6,7 +6,8 @@ import org.javawebstack.httpserver.handler.AfterRequestHandler;
 import org.javawebstack.httpserver.handler.RequestHandler;
 import org.javawebstack.httpserver.handler.WebSocketHandler;
 import org.javawebstack.httpserver.helper.HttpMethod;
-import org.javawebstack.httpserver.router.annotation.*;
+import org.javawebstack.httpserver.router.annotation.PathPrefix;
+import org.javawebstack.httpserver.router.annotation.With;
 import org.javawebstack.httpserver.router.annotation.params.*;
 import org.javawebstack.httpserver.router.annotation.verbs.*;
 import org.javawebstack.httpserver.websocket.WebSocket;
@@ -86,7 +87,7 @@ public class RouteBinder {
             }
             for (WebSocketMessage a : getAnnotations(WebSocketMessage.class, method)) {
                 WebSocketBindHandler handler = websocketHandlers.get(a.name());
-                if(handler == null) {
+                if (handler == null) {
                     bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
                     handler = new WebSocketBindHandler();
                     for (String prefix : prefixes)
@@ -97,7 +98,7 @@ public class RouteBinder {
             }
             for (WebSocketConnect a : getAnnotations(WebSocketConnect.class, method)) {
                 WebSocketBindHandler handler = websocketHandlers.get(a.name());
-                if(handler == null) {
+                if (handler == null) {
                     bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
                     handler = new WebSocketBindHandler();
                     for (String prefix : prefixes)
@@ -108,7 +109,7 @@ public class RouteBinder {
             }
             for (WebSocketClose a : getAnnotations(WebSocketClose.class, method)) {
                 WebSocketBindHandler handler = websocketHandlers.get(a.name());
-                if(handler == null) {
+                if (handler == null) {
                     bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
                     handler = new WebSocketBindHandler();
                     for (String prefix : prefixes)
@@ -201,11 +202,11 @@ public class RouteBinder {
             defaultValues = new String[parameterTypes.length];
             for (int i = 0; i < parameterAnnotations.length; i++) {
                 DefaultValue defaultValue = getAnnotation(DefaultValue.class, method, i);
-                if(defaultValue != null)
+                if (defaultValue != null)
                     defaultValues[i] = defaultValue.value();
-                for(Class<? extends Annotation> annotation : new Class[]{ Attrib.class, Query.class, Body.class, Path.class, WSMessage.class, WSCode.class, WSReason.class }) {
+                for (Class<? extends Annotation> annotation : new Class[]{Attrib.class, Query.class, Body.class, Path.class, WSMessage.class, WSCode.class, WSReason.class}) {
                     parameterAnnotations[i] = getAnnotation(annotation, method, i);
-                    if(parameterAnnotations[i] != null)
+                    if (parameterAnnotations[i] != null)
                         continue;
                 }
                 parameterAnnotations[i] = parameterTypes[i];
@@ -256,22 +257,25 @@ public class RouteBinder {
         BindMapper messageHandler;
         BindMapper connectHandler;
         BindMapper closeHandler;
+
         public void onConnect(WebSocket socket) {
-            if(connectHandler != null)
-                connectHandler.invoke(socket.getExchange(), new HashMap<String, Object>(){{
+            if (connectHandler != null)
+                connectHandler.invoke(socket.getExchange(), new HashMap<String, Object>() {{
                     put("websocket", socket);
                 }});
         }
+
         public void onMessage(WebSocket socket, String message) {
-            if(messageHandler != null)
-                messageHandler.invoke(socket.getExchange(), new HashMap<String, Object>(){{
+            if (messageHandler != null)
+                messageHandler.invoke(socket.getExchange(), new HashMap<String, Object>() {{
                     put("websocket", socket);
                     put("websocketMessage", message);
                 }});
         }
+
         public void onClose(WebSocket socket, int code, String reason) {
-            if(closeHandler != null)
-                closeHandler.invoke(socket.getExchange(), new HashMap<String, Object>(){{
+            if (closeHandler != null)
+                closeHandler.invoke(socket.getExchange(), new HashMap<String, Object>() {{
                     put("websocket", socket);
                     put("websocketCode", code);
                     put("websocketReason", reason);
@@ -281,9 +285,11 @@ public class RouteBinder {
 
     private static class BindHandler implements RequestHandler {
         private final BindMapper handler;
+
         public BindHandler(HTTPServer server, Object controller, Method method) {
             handler = new BindMapper(server, controller, method);
         }
+
         public Object handle(Exchange exchange) {
             return handler.invoke(exchange, new HashMap<>());
         }

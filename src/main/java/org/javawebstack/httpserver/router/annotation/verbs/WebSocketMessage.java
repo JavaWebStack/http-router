@@ -7,6 +7,7 @@ import java.lang.annotation.*;
 @Repeatable(WebSocketMessage.Multiple.class)
 public @interface WebSocketMessage {
     String value() default "/";
+
     String name() default "";
 
     @Retention(RetentionPolicy.RUNTIME)

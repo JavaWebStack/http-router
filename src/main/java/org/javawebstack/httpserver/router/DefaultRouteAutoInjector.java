@@ -12,7 +12,7 @@ public class DefaultRouteAutoInjector implements RouteAutoInjector {
     public Object getValue(Exchange exchange, Map<String, Object> extraArgs, Class<?> type) {
         if (Exchange.class.isAssignableFrom(type))
             return exchange;
-        if(WebSocket.class.isAssignableFrom(type) && extraArgs.containsKey("websocket"))
+        if (WebSocket.class.isAssignableFrom(type) && extraArgs.containsKey("websocket"))
             return extraArgs.get("websocket");
         if (type.equals(HttpMethod.class))
             return exchange.getMethod();
