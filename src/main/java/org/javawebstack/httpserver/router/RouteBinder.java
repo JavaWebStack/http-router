@@ -204,12 +204,16 @@ public class RouteBinder {
                 DefaultValue defaultValue = getAnnotation(DefaultValue.class, method, i);
                 if (defaultValue != null)
                     defaultValues[i] = defaultValue.value();
+
                 for (Class<? extends Annotation> annotation : new Class[]{Attrib.class, Query.class, Body.class, Path.class, WSMessage.class, WSCode.class, WSReason.class}) {
-                    parameterAnnotations[i] = getAnnotation(annotation, method, i);
-                    if (parameterAnnotations[i] != null)
-                        continue;
+                    Annotation annotation1 = getAnnotation(annotation, method, i);
+                    if (annotation1 != null) {
+                        parameterAnnotations[i] = annotation1;
+                    }
                 }
-                parameterAnnotations[i] = parameterTypes[i];
+
+                if (parameterAnnotations[i] == null)
+                    parameterAnnotations[i] = parameterTypes[i];
             }
         }
 
@@ -219,6 +223,8 @@ public class RouteBinder {
                 Object a = parameterAnnotations[i];
                 if (a == null)
                     continue;
+
+
                 if (a instanceof Body) {
                     args[i] = exchange.body(method.getParameterTypes()[i]);
                 } else if (a instanceof Attrib) {
