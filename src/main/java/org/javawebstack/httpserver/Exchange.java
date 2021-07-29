@@ -124,6 +124,7 @@ public class Exchange {
     public Exchange write(byte[] bytes) {
         try {
             response.getOutputStream().write(bytes);
+            response.getOutputStream().flush();
         } catch (IOException ignored) {
         }
         return this;
@@ -132,6 +133,7 @@ public class Exchange {
     public Exchange write(byte[] bytes, int offset, int length) {
         try {
             response.getOutputStream().write(bytes, offset, length);
+            response.getOutputStream().flush();
         } catch (IOException ignored) {
         }
         return this;

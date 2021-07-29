@@ -401,6 +401,8 @@ public class HTTPServer implements RouteParamTransformerProvider {
             if (res != null)
                 return res;
         }
+        if(object instanceof byte[])
+            return (byte[]) object;
         return object.toString().getBytes(StandardCharsets.UTF_8);
     }
 
