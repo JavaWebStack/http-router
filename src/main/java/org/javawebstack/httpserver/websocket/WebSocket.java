@@ -22,7 +22,7 @@ public class WebSocket {
         return exchange;
     }
 
-    WebSocketHandler getHandler() {
+    public WebSocketHandler getHandler() {
         return handler;
     }
 
@@ -52,4 +52,7 @@ public class WebSocket {
         }
     }
 
+    public Session getSession() {
+        return session;
+    }
 }

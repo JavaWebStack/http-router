@@ -1,8 +1,5 @@
 package org.javawebstack.httpserver;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -323,7 +320,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
                         } catch (Throwable ex) {
                             response = exceptionHandler.handle(exchange, ex);
                         }
-                        if(response != null)
+                        if (response != null)
                             break middlewares;
                     }
                 }
