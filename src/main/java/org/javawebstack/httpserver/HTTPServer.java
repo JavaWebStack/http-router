@@ -299,12 +299,14 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public void execute(Exchange exchange) {
+        Exchange.exchanges.set(exchange);
         try {
             Object response = null;
             try {
                 for (RequestInterceptor ic : beforeInterceptors) {
                     if (ic.intercept(exchange)) {
                         exchange.close();
+                        Exchange.exchanges.remove();
                         return;
                     }
                 }
@@ -334,8 +336,10 @@ public class HTTPServer implements RouteParamTransformerProvider {
                         exchange.getPathVariables().putAll(pathVariables);
                         for (RequestHandler handler : route.getHandlers()) {
                             response = handler.handle(exchange);
-                            if (exchange.getMethod() == HttpMethod.WEBSOCKET)
+                            if (exchange.getMethod() == HttpMethod.WEBSOCKET) {
+                                Exchange.exchanges.remove();
                                 return;
+                            }
                             if (response != null)
                                 break routes;
                         }
@@ -361,6 +365,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
                 exchange.write(transformResponse(exchange, response));
             if (exchange.getMethod() != HttpMethod.WEBSOCKET)
                 exchange.close();
+            Exchange.exchanges.remove();
             return;
         } catch (Throwable ex) {
             try {
@@ -369,6 +374,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
                 logger.log(Level.SEVERE, ex2, () -> "An error occured in the exception handler!");
             }
         }
+        Exchange.exchanges.remove();
         exchange.close();
     }
 

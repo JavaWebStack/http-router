@@ -22,6 +22,12 @@ import java.util.*;
 
 public class Exchange {
 
+    static ThreadLocal<Exchange> exchanges = new ThreadLocal<>();
+
+    public static Exchange current() {
+        return exchanges.get();
+    }
+
     private final HTTPServer server;
     private final HttpMethod method;
     private final String path;
