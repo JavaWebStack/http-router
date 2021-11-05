@@ -302,13 +302,24 @@ public class Exchange {
         return getPathElement(getPathElement(source, spl[0]), path.substring(spl[0].length() + 1));
     }
 
+    public Exchange enableMultipart() {
+        enableMultipart(System.getProperty("java.io.tmpdir"));
+        return this;
+    }
+
     public Exchange enableMultipart(String location) {
         enableMultipart(location, -1L);
         return this;
     }
 
     public Exchange enableMultipart(String location, long maxFileSize) {
-        request.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(location, maxFileSize, -1L, 0));
+        enableMultipart(location, maxFileSize, 1_048_576);
+        return this;
+    }
+
+
+    public Exchange enableMultipart(String location, long maxFileSize, int fileSizeThreshold) {
+        request.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(location, maxFileSize, -1L, fileSizeThreshold));
         return this;
     }
 }
