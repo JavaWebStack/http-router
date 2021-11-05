@@ -12,7 +12,7 @@
 
     <groupId>org.javawebstack</groupId>
     <artifactId>http-server</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>${buildVersion}</version>
 
     <name>http-server</name>
     <description>This library provides a routing and request mapping stack on top of the well known and industry proven eclipse jetty http server. It also supports websockets.</description>
@@ -56,7 +56,7 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>11.0.6</version>
+            <version>9.4.44.v20210927</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
@@ -155,12 +155,12 @@
 
     <distributionManagement>
         <snapshotRepository>
-            <id>javawebstack-snapshots</id>
-            <url>https://nexus.lumaserv.cloud/repository/javawebstack-snapshots</url>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
         </snapshotRepository>
         <repository>
-            <id>javawebstack-releases</id>
-            <url>https://nexus.lumaserv.cloud/repository/javawebstack-releases</url>
+            <id>ossrh</id>
+            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
         </repository>
     </distributionManagement>
 
