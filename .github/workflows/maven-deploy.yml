@@ -1,5 +1,8 @@
 name: Maven Deploy
-on: [push]
+on:
+  push:
+    branches:
+      - dev
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,9 +13,15 @@ jobs:
         with:
           java-version: 1.8
       - name: Build
-        run: mvn -DnewVersion=1.0-SNAPSHOT -B package --file pom.xml
+        run: mvn -B package --file pom.xml
+      - name: Install GPG Key
+        run: echo -e "$GPG_PRIVATE_KEY" | gpg --import --no-tty --batch --yes
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
       - name: Deploy to JavaWebStack Repository
-        run: mvn deploy -DnewVersion=1.0-SNAPSHOT -s build/settings.xml
+        run: mvn deploy -s build/settings.xml
         env:
           DEPLOYMENT_USERNAME: ${{ secrets.DEPLOYMENT_USERNAME }}
           DEPLOYMENT_PASSWORD: ${{ secrets.DEPLOYMENT_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}

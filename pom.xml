@@ -4,9 +4,41 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <buildVersion>1.0.0-SNAPSHOT</buildVersion>
+    </properties>
+
     <groupId>org.javawebstack</groupId>
-    <artifactId>HTTP-Server</artifactId>
-    <version>${newVersion}</version>
+    <artifactId>http-server</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+
+    <name>http-server</name>
+    <description>This library provides a routing and request mapping stack on top of the well known and industry proven eclipse jetty http server. It also supports websockets.</description>
+    <url>https://github.com/JavaWebStack/http-server</url>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Jan Bebendorf</name>
+            <email>jan@bebendorf.eu</email>
+            <organization>JavaWebStack</organization>
+            <organizationUrl>https://javawebstack.org</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/JavaWebStack/http-server.git</connection>
+        <developerConnection>scm:git:ssh://github.com:JavaWebStack/http-server.git</developerConnection>
+        <url>https://github.com/JavaWebStack/http-server/tree/master</url>
+    </scm>
 
     <repositories>
         <repository>
@@ -17,60 +49,40 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.javawebstack</groupId>
+            <artifactId>validator</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>9.4.26.v20200117</version>
-            <scope>compile</scope>
+            <version>11.0.6</version>
         </dependency>
         <dependency>
             <groupId>org.eclipse.jetty.websocket</groupId>
             <artifactId>websocket-server</artifactId>
-            <version>9.4.26.v20200117</version>
+            <version>9.4.43.v20210629</version>
         </dependency>
         <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
-            <version>0.9.12</version>
+            <version>0.10.2</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.4.2</version>
-            <scope>provided</scope>
+            <version>5.8.1</version>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.4.2</version>
+            <version>5.8.1</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.javawebstack</groupId>
-            <artifactId>AbstractData</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.javawebstack</groupId>
-            <artifactId>Validator</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.javawebstack</groupId>
-            <artifactId>Web-Framework</artifactId>
-            <version>alpha-1.0</version>
         </dependency>
     </dependencies>
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>8</source>
-                    <target>8</target>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -86,6 +98,55 @@
                         <goals>
                             <goal>deploy</goal>
                         </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>2.2.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                        <configuration>
+                            <keyname>A313520526A8DFE1C2A30399C35A3D43C557B112</keyname>
+                            <passphraseServerId>gpg</passphraseServerId>
+                            <gpgArguments>
+                                <arg>--no-tty</arg>
+                                <arg>--batch</arg>
+                                <arg>--yes</arg>
+                            </gpgArguments>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
