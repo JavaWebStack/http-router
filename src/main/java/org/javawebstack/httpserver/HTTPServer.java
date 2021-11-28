@@ -27,9 +27,9 @@ import org.reflections.Reflections;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,6 +52,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private List<RouteAutoInjector> routeAutoInjectors = new ArrayList<>();
     private final Map<String, RequestHandler> beforeMiddleware = new HashMap<>();
     private final Map<String, AfterRequestHandler> afterMiddleware = new HashMap<>();
+    private Function<Class<?>, Object> controllerInitiator = this::defaultControllerInitiator;
 
     public HTTPServer() {
         routeParamTransformers.add(DefaultRouteParamTransformer.INSTANCE);
@@ -233,19 +234,31 @@ public class HTTPServer implements RouteParamTransformerProvider {
         return this;
     }
 
+    private Object defaultControllerInitiator (Class<?> clazz) {
+        try {
+            return clazz.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public HTTPServer controllerInitiator (Function<Class<?>, Object> initiator) {
+        controllerInitiator = initiator;
+        return this;
+    }
+
     public HTTPServer controller(Class<?> parentClass, Package p) {
         return controller("", parentClass, p);
     }
 
     public HTTPServer controller(String globalPrefix, Class<?> parentClass, Package p) {
         Reflections reflections = new Reflections(p.getName());
-        reflections.getSubTypesOf(parentClass).forEach(c -> {
-            try {
-                Object controller = c.newInstance();
-                controller(globalPrefix, controller);
-            } catch (InstantiationException | IllegalAccessException e) {
-            }
-        });
+        reflections.getSubTypesOf(parentClass)
+                .stream()
+                .map(controllerInitiator)
+                .forEach(c -> controller(globalPrefix, c));
         return this;
     }
 
