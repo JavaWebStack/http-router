@@ -1,9 +1,6 @@
 package org.javawebstack.httpserver;
 
-import org.javawebstack.abstractdata.AbstractElement;
-import org.javawebstack.abstractdata.AbstractMapper;
-import org.javawebstack.abstractdata.AbstractNull;
-import org.javawebstack.abstractdata.AbstractObject;
+import org.javawebstack.abstractdata.*;
 import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.helper.MimeType;
 import org.javawebstack.validator.ValidationContext;
@@ -69,21 +66,21 @@ public class Exchange {
         MimeType type = MimeType.byMimeType(contentType);
         if (type == null)
             type = MimeType.JSON;
-        AbstractElement request = AbstractNull.INSTANCE;
+        AbstractElement request = null;
+        boolean arrayLike = clazz.isArray() || Collection.class.isAssignableFrom(clazz);
         switch (type) {
             case JSON:
                 request = AbstractElement.fromJson(body);
                 break;
             case YAML:
-                request = AbstractElement.fromYaml(body, !(clazz.isArray() || Collection.class.isAssignableFrom(clazz)));
+                request = AbstractElement.fromYaml(body, !arrayLike);
                 break;
             case X_WWW_FORM_URLENCODED:
                 request = AbstractElement.fromFormData(body);
                 break;
-            default:
-                request = new AbstractObject();
-                break;
         }
+        if(request == null || request.isNull())
+            request = arrayLike ? new AbstractArray() : new AbstractObject();
         ValidationResult result = Validator.getValidator(clazz).validate(new ValidationContext().attrib("exchange", this), request);
         if (!result.isValid())
             throw new ValidationException(result);
