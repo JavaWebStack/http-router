@@ -181,7 +181,7 @@ public class Exchange {
     }
 
     public List<Locale> locales() {
-        String locale = socket.getRequestHeader("locale");
+        String locale = socket.getRequestHeader("accept-language");
         if(locale == null)
             return new ArrayList<>();
         return Stream.of(locale.split(" ?,")).map(s -> s.split(";")[0]).map(Locale::forLanguageTag).collect(Collectors.toList());
