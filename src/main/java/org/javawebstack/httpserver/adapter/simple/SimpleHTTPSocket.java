@@ -1,7 +1,8 @@
-package org.javawebstack.httpserver.socket;
+package org.javawebstack.httpserver.adapter.simple;
 
 import org.javawebstack.httpserver.HTTPMethod;
 import org.javawebstack.httpserver.HTTPStatus;
+import org.javawebstack.httpserver.adapter.IHTTPSocket;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -11,7 +12,7 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-public class HTTPSocket {
+public class SimpleHTTPSocket implements IHTTPSocket {
 
     private final Socket socket;
     private final InputStream inputStream;
@@ -26,7 +27,7 @@ public class HTTPSocket {
     private String responseStatusMessage = "OK";
     private boolean headersSent;
 
-    public HTTPSocket(Socket socket) throws IOException {
+    public SimpleHTTPSocket(Socket socket) throws IOException {
         this.socket = socket;
         this.inputStream = socket.getInputStream();
         this.outputStream = socket.getOutputStream();
@@ -79,27 +80,31 @@ public class HTTPSocket {
         }
     }
 
-    public HTTPSocket setResponseStatus(HTTPStatus status) {
+    public String getRemoteAddress() {
+        return socket.getInetAddress().getHostAddress();
+    }
+
+    public SimpleHTTPSocket setResponseStatus(HTTPStatus status) {
         return setResponseStatus(status.getStatus(), status.getMessage());
     }
 
-    public HTTPSocket setResponseStatus(int status) {
+    public SimpleHTTPSocket setResponseStatus(int status) {
         HTTPStatus s = HTTPStatus.byStatus(status);
         return setResponseStatus(status, s != null ? s.getMessage() : "Unknown");
     }
 
-    public HTTPSocket setResponseStatus(int status, String message) {
+    public SimpleHTTPSocket setResponseStatus(int status, String message) {
         this.responseStatus = status;
         this.responseStatusMessage = message;
         return this;
     }
 
-    public HTTPSocket setResponseHeader(String name, String value) {
+    public SimpleHTTPSocket setResponseHeader(String name, String value) {
         responseHeaders.put(name.toLowerCase(Locale.ROOT), Arrays.asList(value));
         return this;
     }
 
-    public HTTPSocket addResponseHeader(String name, String value) {
+    public SimpleHTTPSocket addResponseHeader(String name, String value) {
         responseHeaders.computeIfAbsent(name.toLowerCase(Locale.ROOT), h -> new ArrayList<>()).add(value);
         return this;
     }
@@ -109,6 +114,8 @@ public class HTTPSocket {
     }
 
     public void writeHeaders() throws IOException {
+        if(headersSent)
+            return;
         headersSent = true;
         StringBuilder sb = new StringBuilder(requestVersion)
                 .append(' ')
@@ -146,12 +153,17 @@ public class HTTPSocket {
         return requestVersion;
     }
 
-    public Map<String, List<String>> getRequestHeaders() {
-        return requestHeaders;
+    public Set<String> getRequestHeaderNames() {
+        return requestHeaders.keySet();
     }
 
-    public Map<String, List<String>> getResponseHeaders() {
-        return responseHeaders;
+    public String getRequestHeader(String name) {
+        List<String> values = requestHeaders.get(name.toLowerCase(Locale.ROOT));
+        return values == null || values.size() == 0 ? null : values.get(0);
+    }
+
+    public List<String> getRequestHeaders(String name) {
+        return requestHeaders.getOrDefault(name.toLowerCase(Locale.ROOT), Collections.emptyList());
     }
 
     public int getResponseStatus() {

@@ -10,6 +10,7 @@ public enum HTTPMethod {
     HEAD,
     OPTIONS,
     TRACE,
-    CONNECT
+    CONNECT,
+    WEBSOCKET
 
 }

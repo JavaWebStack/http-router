@@ -1,7 +1,7 @@
 package org.javawebstack.httpserver.router;
 
 import org.javawebstack.httpserver.Exchange;
-import org.javawebstack.httpserver.helper.HttpMethod;
+import org.javawebstack.httpserver.HTTPMethod;
 import org.javawebstack.httpserver.websocket.WebSocket;
 
 import java.util.Map;
@@ -14,7 +14,7 @@ public class DefaultRouteAutoInjector implements RouteAutoInjector {
             return exchange;
         if (WebSocket.class.isAssignableFrom(type) && extraArgs.containsKey("websocket"))
             return extraArgs.get("websocket");
-        if (type.equals(HttpMethod.class))
+        if (type.equals(HTTPMethod.class))
             return exchange.getMethod();
         return null;
     }

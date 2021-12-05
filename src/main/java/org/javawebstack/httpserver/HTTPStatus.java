@@ -2,6 +2,10 @@ package org.javawebstack.httpserver;
 
 public enum HTTPStatus {
 
+    CONTINUE(100, "Continue"),
+    SWITCHING_PROTOCOLS(101, "Switching Protocols"),
+    PROCESSING(102, "Processing"),
+
     OK(200, "OK"),
     CREATED(201, "Created"),
     ACCEPTED(202, "Accepted"),

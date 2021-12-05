@@ -1,9 +1,13 @@
 package org.javawebstack.httpserver.test;
 
+import org.javawebstack.httpserver.HTTPMethod;
 import org.javawebstack.httpserver.HTTPServer;
-import org.javawebstack.httpserver.helper.HttpMethod;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public abstract class HTTPTest {
@@ -28,7 +32,7 @@ public abstract class HTTPTest {
     }
 
     public TestExchange httpGet(String url) {
-        return httpRequest(HttpMethod.GET, url, null);
+        return httpRequest(HTTPMethod.GET, url, null);
     }
 
     public TestExchange httpPost(String url) {
@@ -36,7 +40,7 @@ public abstract class HTTPTest {
     }
 
     public TestExchange httpPost(String url, Object content) {
-        return httpRequest(HttpMethod.POST, url, content);
+        return httpRequest(HTTPMethod.POST, url, content);
     }
 
     public TestExchange httpPut(String url) {
@@ -44,7 +48,7 @@ public abstract class HTTPTest {
     }
 
     public TestExchange httpPut(String url, Object content) {
-        return httpRequest(HttpMethod.PUT, url, content);
+        return httpRequest(HTTPMethod.PUT, url, content);
     }
 
     public TestExchange httpDelete(String url) {
@@ -52,25 +56,22 @@ public abstract class HTTPTest {
     }
 
     public TestExchange httpDelete(String url, Object content) {
-        return httpRequest(HttpMethod.DELETE, url, content);
+        return httpRequest(HTTPMethod.DELETE, url, content);
     }
 
-    public TestExchange httpRequest(HttpMethod method, String url, Object content) {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setMethod(method);
-        request.setPath(url);
-        defaultHeaders.forEach(request::addHeader);
+    public TestExchange httpRequest(HTTPMethod method, String url, Object content) {
+        TestHTTPSocket socket = new TestHTTPSocket(method, url);
+        defaultHeaders.forEach((k, v) -> socket.getRequestHeaders().put(k.toLowerCase(Locale.ROOT), Collections.singletonList(v)));
         if (content != null) {
             if (content instanceof String) {
-                request.setContent((String) content);
+                socket.setInputStream(new ByteArrayInputStream(((String) content).getBytes(StandardCharsets.UTF_8)));
             } else if (content instanceof byte[]) {
-                request.setContent((byte[]) content);
+                socket.setInputStream(new ByteArrayInputStream((byte[]) content));
             } else {
-                request.setContent(server.getAbstractMapper().toAbstract(content).toJsonString());
+                socket.setInputStream(new ByteArrayInputStream(server.getAbstractMapper().toAbstract(content).toJsonString().getBytes(StandardCharsets.UTF_8)));
             }
         }
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        TestExchange exchange = new TestExchange(server, request, response);
+        TestExchange exchange = new TestExchange(server, socket);
         server.execute(exchange);
         return exchange;
     }

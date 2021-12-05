@@ -3,20 +3,24 @@ package org.javawebstack.httpserver.test;
 import org.javawebstack.abstractdata.AbstractElement;
 import org.javawebstack.httpserver.Exchange;
 import org.javawebstack.httpserver.HTTPServer;
-import org.javawebstack.httpserver.helper.MimeType;
+import org.javawebstack.httpserver.adapter.IHTTPSocket;
+import org.javawebstack.httpserver.util.MimeType;
 import org.junit.jupiter.api.Assertions;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class TestExchange extends Exchange {
-    private MockHttpServletRequest mockReq;
-    private MockHttpServletResponse mockRes;
+    
+    private TestHTTPSocket testSocket;
 
-    public TestExchange(HTTPServer service, MockHttpServletRequest request, MockHttpServletResponse response) {
-        super(service, request, response);
-        this.mockReq = request;
-        this.mockRes = response;
+    public TestExchange(HTTPServer service, TestHTTPSocket socket) {
+        super(service, socket);
+        this.testSocket = socket;
     }
 
     public TestExchange print() {
@@ -24,67 +28,67 @@ public class TestExchange extends Exchange {
         return this;
     }
 
-    public MockHttpServletRequest mockRequest() {
-        return mockReq;
-    }
-
-    public MockHttpServletResponse mockResponse() {
-        return mockRes;
+    public String getOutputString() {
+        try {
+            return new String(((ByteArrayOutputStream) testSocket.getOutputStream()).toByteArray(), StandardCharsets.UTF_8);
+        } catch (IOException ignored) {
+            return null;
+        }
     }
 
     public TestExchange printResponse() {
-        System.out.println("HTTP Response " + mockRes.getStatus());
-        System.out.println(mockRes.getContentString());
+        System.out.println("HTTP Response " + testSocket.getResponseStatus());
+        System.out.println(getOutputString());
         return this;
     }
 
     public TestExchange assertStatus(int status) {
-        Assertions.assertEquals(status, mockRes.getStatus());
+        Assertions.assertEquals(status, testSocket.getResponseStatus());
         return this;
     }
 
     public TestExchange assertStatus(int status, String message) {
-        Assertions.assertEquals(status, mockRes.getStatus(), message);
+        Assertions.assertEquals(status, testSocket.getResponseStatus(), message);
         return this;
     }
 
     public TestExchange assertNotStatus(int status) {
-        Assertions.assertNotEquals(status, mockRes.getStatus());
+        Assertions.assertNotEquals(status, testSocket.getResponseStatus());
         return this;
     }
 
     public TestExchange assertNotStatus(int status, String message) {
-        Assertions.assertNotEquals(status, mockRes.getStatus(), message);
+        Assertions.assertNotEquals(status, testSocket.getResponseStatus(), message);
         return this;
     }
 
     public TestExchange assertOk() {
-        Assertions.assertEquals(200, mockRes.getStatus());
+        Assertions.assertEquals(200, testSocket.getResponseStatus());
         return this;
     }
 
     public TestExchange assertOk(String message) {
-        Assertions.assertEquals(200, mockRes.getStatus(), message);
+        Assertions.assertEquals(200, testSocket.getResponseStatus(), message);
         return this;
     }
 
     public TestExchange assertCreated() {
-        Assertions.assertEquals(201, mockRes.getStatus());
+        Assertions.assertEquals(201, testSocket.getResponseStatus());
         return this;
     }
 
     public TestExchange assertCreated(String message) {
-        Assertions.assertEquals(201, mockRes.getStatus(), message);
+        Assertions.assertEquals(201, testSocket.getResponseStatus(), message);
         return this;
     }
 
     public TestExchange assertNoContent() {
-        Assertions.assertEquals(204, mockRes.getStatus());
+        Assertions.assertEquals(204, testSocket.getResponseStatus());
         return this;
     }
 
     public TestExchange assertNoContent(String message) {
-        Assertions.assertEquals(204, mockRes.getStatus(), message);
+        Assertions.assertEquals(204, testSocket.getResponseStatus(), message);
         return this;
     }
 
@@ -100,93 +104,93 @@ public class TestExchange extends Exchange {
 
     public TestExchange assertRedirectTo(String url) {
         assertRedirect();
-        Assertions.assertEquals(url, mockRes.getHeader("Location"));
+        Assertions.assertEquals(url, testSocket.getResponseHeaders().get("location"));
         return this;
     }
 
     public TestExchange assertRedirectTo(String url, String message) {
         assertRedirect(message);
-        Assertions.assertEquals(url, mockRes.getHeader("Location"), message);
+        Assertions.assertEquals(url, testSocket.getResponseHeaders().get("location"), message);
         return this;
     }
 
     public TestExchange assertNotFound() {
-        Assertions.assertEquals(404, mockRes.getStatus());
+        Assertions.assertEquals(404, testSocket.getResponseStatus());
         return this;
     }
 
     public TestExchange assertNotFound(String message) {
-        Assertions.assertEquals(404, mockRes.getStatus(), message);
+        Assertions.assertEquals(404, testSocket.getResponseStatus(), message);
         return this;
     }
 
     public TestExchange assertBadRequest() {
-        Assertions.assertEquals(400, mockRes.getStatus());
+        Assertions.assertEquals(400, testSocket.getResponseStatus());
         return this;
     }
 
     public TestExchange assertBadRequest(String message) {
-        Assertions.assertEquals(400, mockRes.getStatus(), message);
+        Assertions.assertEquals(400, testSocket.getResponseStatus(), message);
         return this;
     }
 
     public TestExchange assertForbidden() {
-        Assertions.assertEquals(403, mockRes.getStatus());
+        Assertions.assertEquals(403, testSocket.getResponseStatus());
         return this;
     }
 
     public TestExchange assertForbidden(String message) {
-        Assertions.assertEquals(403, mockRes.getStatus(), message);
+        Assertions.assertEquals(403, testSocket.getResponseStatus(), message);
         return this;
     }
 
     public TestExchange assertUnauthorized() {
-        Assertions.assertEquals(401, mockRes.getStatus());
+        Assertions.assertEquals(401, testSocket.getResponseStatus());
         return this;
     }
 
     public TestExchange assertUnauthorized(String message) {
-        Assertions.assertEquals(401, mockRes.getStatus(), message);
+        Assertions.assertEquals(401, testSocket.getResponseStatus(), message);
         return this;
     }
 
     public TestExchange assertSuccess() {
-        Assertions.assertEquals(200, (mockRes.getStatus() / 100) * 100);
+        Assertions.assertEquals(200, (testSocket.getResponseStatus() / 100) * 100);
         return this;
     }
 
     public TestExchange assertSuccess(String message) {
-        Assertions.assertEquals(200, (mockRes.getStatus() / 100) * 100, message);
+        Assertions.assertEquals(200, (testSocket.getResponseStatus() / 100) * 100, message);
         return this;
     }
 
     public TestExchange assertError() {
-        Assertions.assertTrue(mockRes.getStatus() >= 400);
+        Assertions.assertTrue(testSocket.getResponseStatus() >= 400);
         return this;
     }
 
     public TestExchange assertError(String message) {
-        Assertions.assertTrue(mockRes.getStatus() >= 400, message);
+        Assertions.assertTrue(testSocket.getResponseStatus() >= 400, message);
         return this;
     }
 
     public TestExchange assertHeader(String key, String value) {
-        Assertions.assertEquals(value, mockRes.getHeader(key));
+        Assertions.assertEquals(value, testSocket.getResponseHeaders().get(key.toLowerCase(Locale.ROOT)));
         return this;
     }
 
     public TestExchange assertHeader(String key, String value, String message) {
-        Assertions.assertEquals(value, mockRes.getHeader(key), message);
+        Assertions.assertEquals(value, testSocket.getResponseHeaders().get(key.toLowerCase(Locale.ROOT)), message);
         return this;
     }
 
     public TestExchange assertJsonPath(String path, Object value) {
-        Assertions.assertTrue(checkGraph(getPathElement(mockResponseBody(mockRes), path), value));
+        Assertions.assertTrue(checkGraph(getPathElement(mockResponseBody(), path), value));
         return this;
     }
 
     public TestExchange assertJsonPath(String path, Object value, String message) {
-        Assertions.assertTrue(checkGraph(getPathElement(mockResponseBody(mockRes), path), value), message);
+        Assertions.assertTrue(checkGraph(getPathElement(mockResponseBody(), path), value), message);
         return this;
     }
 
@@ -201,26 +205,27 @@ public class TestExchange extends Exchange {
     }
 
     public TestExchange assertBody(String content) {
-        Assertions.assertEquals(content, mockRes.getContentString());
+        Assertions.assertEquals(content, getOutputString());
         return this;
     }
 
     public TestExchange assertBody(String content, String message) {
-        Assertions.assertEquals(content, mockRes.getContentString(), message);
+        Assertions.assertEquals(content, getOutputString(), message);
         return this;
     }
 
-    private AbstractElement mockResponseBody(MockHttpServletResponse response) {
-        MimeType type = MimeType.byMimeType(response.getContentType());
+    private AbstractElement mockResponseBody() {
+        List<String> contentTypes = testSocket.getResponseHeaders().get("content-type");
+        MimeType type = MimeType.byMimeType(contentTypes.size() > 0 ? contentTypes.get(0) : null);
         if (type == null)
             type = MimeType.JSON;
         switch (type) {
             default:
-                return AbstractElement.fromJson(response.getContentString());
+                return AbstractElement.fromJson(getOutputString());
             case YAML:
-                return AbstractElement.fromYaml(response.getContentString(), true);
+                return AbstractElement.fromYaml(getOutputString(), true);
             case X_WWW_FORM_URLENCODED:
-                return AbstractElement.fromFormData(response.getContentString());
+                return AbstractElement.fromFormData(getOutputString());
         }
     }
 
@@ -280,6 +285,6 @@ public class TestExchange extends Exchange {
         redirectCodes.add(307);
         redirectCodes.add(308);
 
-        return redirectCodes.contains(mockRes.getStatus());
+        return redirectCodes.contains(testSocket.getResponseStatus());
     }
 }

@@ -1,15 +1,10 @@
 package org.javawebstack.httpserver;
 
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.eclipse.jetty.util.log.Log;
-import org.eclipse.jetty.websocket.servlet.WebSocketServletFactory;
 import org.javawebstack.abstractdata.AbstractMapper;
 import org.javawebstack.abstractdata.NamingPolicy;
+import org.javawebstack.httpserver.adapter.IHTTPSocketServer;
+import org.javawebstack.httpserver.adapter.simple.SimpleHTTPSocketServer;
 import org.javawebstack.httpserver.handler.*;
-import org.javawebstack.httpserver.helper.HttpMethod;
-import org.javawebstack.httpserver.helper.JettyNoLog;
 import org.javawebstack.httpserver.router.DefaultRouteAutoInjector;
 import org.javawebstack.httpserver.router.Route;
 import org.javawebstack.httpserver.router.RouteAutoInjector;
@@ -20,12 +15,9 @@ import org.javawebstack.httpserver.transformer.route.RouteParamTransformer;
 import org.javawebstack.httpserver.transformer.route.RouteParamTransformerProvider;
 import org.javawebstack.httpserver.util.DirectoryFileProvider;
 import org.javawebstack.httpserver.util.ResourceFileProvider;
-import org.javawebstack.httpserver.websocket.InternalWebSocketAdapter;
 import org.javawebstack.httpserver.websocket.InternalWebSocketRequestHandler;
 import org.reflections.Reflections;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -44,17 +36,20 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private ExceptionHandler exceptionHandler = new ExceptionHandler.DefaultExceptionHandler();
     private final List<Route> beforeRoutes = new ArrayList<>();
     private final List<Route> afterRoutes = new ArrayList<>();
-    private Server server;
-    private int port = 80;
+    private final IHTTPSocketServer server;
     private final List<RequestInterceptor> beforeInterceptors = new ArrayList<>();
     private AbstractMapper abstractMapper = new AbstractMapper().setNamingPolicy(NamingPolicy.SNAKE_CASE);
-    private org.eclipse.jetty.websocket.server.WebSocketHandler webSocketHandler;
-    private List<RouteAutoInjector> routeAutoInjectors = new ArrayList<>();
+    private final List<RouteAutoInjector> routeAutoInjectors = new ArrayList<>();
     private final Map<String, RequestHandler> beforeMiddleware = new HashMap<>();
     private final Map<String, AfterRequestHandler> afterMiddleware = new HashMap<>();
     private Function<Class<?>, Object> controllerInitiator = this::defaultControllerInitiator;
 
     public HTTPServer() {
+        this(new SimpleHTTPSocketServer());
+    }
+
+    public HTTPServer(IHTTPSocketServer server) {
+        this.server = server;
         routeParamTransformers.add(DefaultRouteParamTransformer.INSTANCE);
         routeAutoInjectors.add(DefaultRouteAutoInjector.INSTANCE);
     }
@@ -88,43 +83,43 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer get(String pattern, RequestHandler... handlers) {
-        return route(HttpMethod.GET, pattern, handlers);
+        return route(HTTPMethod.GET, pattern, handlers);
     }
 
     public HTTPServer beforeGet(String pattern, RequestHandler... handlers) {
-        return beforeRoute(HttpMethod.GET, pattern, handlers);
+        return beforeRoute(HTTPMethod.GET, pattern, handlers);
     }
 
     public HTTPServer afterGet(String pattern, AfterRequestHandler... handlers) {
-        return afterRoute(HttpMethod.GET, pattern, handlers);
+        return afterRoute(HTTPMethod.GET, pattern, handlers);
     }
 
     public HTTPServer post(String pattern, RequestHandler... handlers) {
-        return route(HttpMethod.POST, pattern, handlers);
+        return route(HTTPMethod.POST, pattern, handlers);
     }
 
     public HTTPServer beforePost(String pattern, RequestHandler... handlers) {
-        return beforeRoute(HttpMethod.POST, pattern, handlers);
+        return beforeRoute(HTTPMethod.POST, pattern, handlers);
     }
 
     public HTTPServer afterPost(String pattern, AfterRequestHandler... handlers) {
-        return afterRoute(HttpMethod.POST, pattern, handlers);
+        return afterRoute(HTTPMethod.POST, pattern, handlers);
     }
 
     public HTTPServer put(String pattern, RequestHandler... handlers) {
-        return route(HttpMethod.PUT, pattern, handlers);
+        return route(HTTPMethod.PUT, pattern, handlers);
     }
 
     public HTTPServer beforePut(String pattern, RequestHandler... handlers) {
-        return beforeRoute(HttpMethod.PUT, pattern, handlers);
+        return beforeRoute(HTTPMethod.PUT, pattern, handlers);
     }
 
     public HTTPServer afterPut(String pattern, AfterRequestHandler... handlers) {
-        return afterRoute(HttpMethod.PUT, pattern, handlers);
+        return afterRoute(HTTPMethod.PUT, pattern, handlers);
     }
 
     public HTTPServer delete(String pattern, RequestHandler... handlers) {
-        return route(HttpMethod.DELETE, pattern, handlers);
+        return route(HTTPMethod.DELETE, pattern, handlers);
     }
 
     public HTTPServer staticDirectory(String pathPrefix, File directory) {
@@ -148,60 +143,60 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer beforeDelete(String pattern, RequestHandler... handlers) {
-        return beforeRoute(HttpMethod.DELETE, pattern, handlers);
+        return beforeRoute(HTTPMethod.DELETE, pattern, handlers);
     }
 
     public HTTPServer afterDelete(String pattern, AfterRequestHandler... handlers) {
-        return afterRoute(HttpMethod.DELETE, pattern, handlers);
+        return afterRoute(HTTPMethod.DELETE, pattern, handlers);
     }
 
-    public HTTPServer route(HttpMethod method, String pattern, RequestHandler... handlers) {
+    public HTTPServer route(HTTPMethod method, String pattern, RequestHandler... handlers) {
         routes.add(new Route(this, method, pattern, Arrays.asList(handlers)));
         return this;
     }
 
-    public HTTPServer beforeRoute(HttpMethod method, String pattern, RequestHandler... handlers) {
+    public HTTPServer beforeRoute(HTTPMethod method, String pattern, RequestHandler... handlers) {
         beforeRoutes.add(new Route(this, method, pattern, Arrays.asList(handlers)));
         return this;
     }
 
-    public HTTPServer afterRoute(HttpMethod method, String pattern, AfterRequestHandler... handlers) {
+    public HTTPServer afterRoute(HTTPMethod method, String pattern, AfterRequestHandler... handlers) {
         afterRoutes.add(new Route(this, method, pattern, null).setAfterHandlers(Arrays.asList(handlers)));
         return this;
     }
 
-    public HTTPServer route(HttpMethod[] methods, String pattern, RequestHandler... handlers) {
-        for (HttpMethod method : methods)
+    public HTTPServer route(HTTPMethod[] methods, String pattern, RequestHandler... handlers) {
+        for (HTTPMethod method : methods)
             route(method, pattern, handlers);
         return this;
     }
 
-    public HTTPServer beforeRoute(HttpMethod[] methods, String pattern, RequestHandler... handlers) {
-        for (HttpMethod method : methods)
+    public HTTPServer beforeRoute(HTTPMethod[] methods, String pattern, RequestHandler... handlers) {
+        for (HTTPMethod method : methods)
             beforeRoute(method, pattern, handlers);
         return this;
     }
 
-    public HTTPServer afterRoute(HttpMethod[] methods, String pattern, AfterRequestHandler... handlers) {
-        for (HttpMethod method : methods)
+    public HTTPServer afterRoute(HTTPMethod[] methods, String pattern, AfterRequestHandler... handlers) {
+        for (HTTPMethod method : methods)
             afterRoute(method, pattern, handlers);
         return this;
     }
 
     public HTTPServer any(String pattern, RequestHandler... handlers) {
-        return route(HttpMethod.values(), pattern, handlers);
+        return route(HTTPMethod.values(), pattern, handlers);
     }
 
     public HTTPServer beforeAny(String pattern, RequestHandler... handlers) {
-        return beforeRoute(HttpMethod.values(), pattern, handlers);
+        return beforeRoute(HTTPMethod.values(), pattern, handlers);
     }
 
     public HTTPServer afterAny(String pattern, AfterRequestHandler... handlers) {
-        return afterRoute(HttpMethod.values(), pattern, handlers);
+        return afterRoute(HTTPMethod.values(), pattern, handlers);
     }
 
     public HTTPServer webSocket(String pattern, WebSocketHandler handler) {
-        return route(HttpMethod.WEBSOCKET, pattern, new InternalWebSocketRequestHandler(handler));
+        return route(HTTPMethod.WEBSOCKET, pattern, new InternalWebSocketRequestHandler(handler));
     }
 
     public HTTPServer middleware(String name, RequestHandler handler) {
@@ -272,24 +267,15 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer port(int port) {
-        this.port = port;
+        server.setPort(port);
         return this;
     }
 
     public HTTPServer start() {
-        Log.setLog(new JettyNoLog());
-        server = new Server(port);
-        server.setHandler(new HttpHandler());
-        webSocketHandler = new org.eclipse.jetty.websocket.server.WebSocketHandler() {
-            public void configure(WebSocketServletFactory webSocketServletFactory) {
-                webSocketServletFactory.register(InternalWebSocketAdapter.class);
-            }
-        };
-        webSocketHandler.setServer(server);
+        server.setHandler(socket -> execute(new Exchange(this, socket)));
         try {
             server.start();
-            webSocketHandler.start();
-            logger.info("HTTP-Server started on port " + port);
+            logger.info("HTTP-Server started on port " + server.getPort());
         } catch (Exception ex) {
             throw new RuntimeException(ex);
         }
@@ -297,11 +283,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public void join() {
-        try {
-            server.join();
-        } catch (InterruptedException ex) {
-            throw new RuntimeException(ex);
-        }
+        server.join();
     }
 
     public void stop() {
@@ -350,7 +332,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
                         exchange.getPathVariables().putAll(pathVariables);
                         for (RequestHandler handler : route.getHandlers()) {
                             response = handler.handle(exchange);
-                            if (exchange.getMethod() == HttpMethod.WEBSOCKET) {
+                            if (exchange.getMethod() == HTTPMethod.WEBSOCKET) {
                                 Exchange.exchanges.remove();
                                 return;
                             }
@@ -377,7 +359,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
             }
             if (response != null)
                 exchange.write(transformResponse(exchange, response));
-            if (exchange.getMethod() != HttpMethod.WEBSOCKET)
+            if (exchange.getMethod() != HTTPMethod.WEBSOCKET)
                 exchange.close();
             Exchange.exchanges.remove();
             return;
@@ -399,7 +381,6 @@ public class HTTPServer implements RouteParamTransformerProvider {
     public RouteParamTransformer getRouteParamTransformer(String type) {
         return routeParamTransformers.stream().filter(t -> t.canTransform(type)).findFirst().orElse(null);
     }
-
     public RequestHandler getBeforeMiddleware(String name) {
         return beforeMiddleware.get(name);
     }
@@ -421,16 +402,6 @@ public class HTTPServer implements RouteParamTransformerProvider {
         if(object instanceof byte[])
             return (byte[]) object;
         return object.toString().getBytes(StandardCharsets.UTF_8);
-    }
-
-    private class HttpHandler extends AbstractHandler {
-        public void handle(String s, Request request, HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse) {
-            execute(new Exchange(HTTPServer.this, httpServletRequest, httpServletResponse));
-        }
-    }
-
-    public org.eclipse.jetty.websocket.server.WebSocketHandler getInternalWebSocketHandler() {
-        return webSocketHandler;
     }
 
     public ExceptionHandler getExceptionHandler() {
