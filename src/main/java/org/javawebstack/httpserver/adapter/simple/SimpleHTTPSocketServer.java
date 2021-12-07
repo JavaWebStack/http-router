@@ -61,7 +61,7 @@ public class SimpleHTTPSocketServer implements IHTTPSocketServer {
     }
 
     public boolean isWebSocketSupported() {
-        return false;
+        return true;
     }
 
 }
