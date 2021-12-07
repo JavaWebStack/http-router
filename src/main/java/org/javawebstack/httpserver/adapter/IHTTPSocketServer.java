@@ -10,5 +10,6 @@ public interface IHTTPSocketServer {
     void stop();
     void join();
     void setHandler(IHTTPSocketHandler handler);
+    boolean isWebSocketSupported();
 
 }

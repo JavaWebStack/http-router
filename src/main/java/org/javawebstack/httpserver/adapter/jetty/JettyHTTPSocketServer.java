@@ -66,4 +66,8 @@ public class JettyHTTPSocketServer implements IHTTPSocketServer {
         this.handler = handler;
     }
 
+    public boolean isWebSocketSupported() {
+        return false;
+    }
+
 }

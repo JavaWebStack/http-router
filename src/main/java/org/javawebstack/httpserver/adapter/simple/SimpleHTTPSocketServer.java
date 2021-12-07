@@ -60,4 +60,8 @@ public class SimpleHTTPSocketServer implements IHTTPSocketServer {
         } catch (IOException e) {}
     }
 
+    public boolean isWebSocketSupported() {
+        return false;
+    }
+
 }

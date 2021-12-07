@@ -3,6 +3,7 @@ package org.javawebstack.httpserver;
 import org.javawebstack.abstractdata.AbstractMapper;
 import org.javawebstack.abstractdata.NamingPolicy;
 import org.javawebstack.httpserver.adapter.IHTTPSocketServer;
+import org.javawebstack.httpserver.adapter.jetty.JettyHTTPSocketServer;
 import org.javawebstack.httpserver.adapter.simple.SimpleHTTPSocketServer;
 import org.javawebstack.httpserver.handler.*;
 import org.javawebstack.httpserver.router.DefaultRouteAutoInjector;
@@ -45,7 +46,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private Function<Class<?>, Object> controllerInitiator = this::defaultControllerInitiator;
 
     public HTTPServer() {
-        this(new SimpleHTTPSocketServer());
+        this(new JettyHTTPSocketServer());
     }
 
     public HTTPServer(IHTTPSocketServer server) {
@@ -196,6 +197,8 @@ public class HTTPServer implements RouteParamTransformerProvider {
     }
 
     public HTTPServer webSocket(String pattern, WebSocketHandler handler) {
+        if(!server.isWebSocketSupported())
+            throw new UnsupportedOperationException(server.getClass().getName() + " does not support websockets!");
         return route(HTTPMethod.WEBSOCKET, pattern, new InternalWebSocketRequestHandler(handler));
     }
 

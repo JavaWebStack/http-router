@@ -56,7 +56,7 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <version>11.0.7</version>
-            <optional>true</optional>
+            <!-- <optional>true</optional> -->
         </dependency>
         <dependency>
             <groupId>org.reflections</groupId>
