@@ -1,58 +1,44 @@
 package org.javawebstack.httpserver.websocket;
 
-import org.eclipse.jetty.websocket.api.Session;
 import org.javawebstack.httpserver.Exchange;
-import org.javawebstack.httpserver.handler.WebSocketHandler;
+import org.javawebstack.httpserver.util.websocket.WebSocketUtil;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 
 public class WebSocket {
 
     private final Exchange exchange;
-    private final WebSocketHandler handler;
-    private Session session;
 
-    public WebSocket(Exchange exchange, WebSocketHandler handler) {
+    public WebSocket(Exchange exchange) {
         this.exchange = exchange;
-        this.handler = handler;
     }
 
     public Exchange getExchange() {
         return exchange;
     }
 
-    public WebSocketHandler getHandler() {
-        return handler;
-    }
-
-    void setSession(Session session) {
-        this.session = session;
-    }
-
     public void close() {
-        session.close();
+        close(null, null);
     }
 
-    public void close(int code, String reason) {
-        session.close(code, reason);
+    public void close(Integer code, String reason) {
+        try {
+            WebSocketUtil.close(exchange.socket(), code, reason);
+        } catch (IOException ignored) {}
     }
 
     public void send(String message) {
         try {
-            session.getRemote().sendString(message);
+            WebSocketUtil.send(exchange.socket(), message);
         } catch (IOException ignored) {
         }
     }
 
     public void send(byte[] message) {
         try {
-            session.getRemote().sendBytes(ByteBuffer.wrap(message));
+            WebSocketUtil.send(exchange.socket(), message);
         } catch (IOException ignored) {
         }
     }
 
-    public Session getSession() {
-        return session;
-    }
 }

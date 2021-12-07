@@ -1,4 +1,4 @@
-package org.javawebstack.httpserver.helper;
+package org.javawebstack.httpserver.util;
 
 import java.util.Arrays;
 import java.util.List;

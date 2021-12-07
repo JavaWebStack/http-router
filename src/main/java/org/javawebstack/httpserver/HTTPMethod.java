@@ -1,6 +1,7 @@
-package org.javawebstack.httpserver.helper;
+package org.javawebstack.httpserver;
 
-public enum HttpMethod {
+public enum HTTPMethod {
+
     GET,
     POST,
     PUT,
@@ -8,8 +9,8 @@ public enum HttpMethod {
     DELETE,
     HEAD,
     OPTIONS,
-    CONNECT,
-    MOVE,
     TRACE,
+    CONNECT,
     WEBSOCKET
+
 }
