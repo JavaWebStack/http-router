@@ -1,5 +1,8 @@
 package org.javawebstack.httpserver.adapter.jetty;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
@@ -7,11 +10,6 @@ import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.javawebstack.httpserver.adapter.IHTTPSocketHandler;
 import org.javawebstack.httpserver.adapter.IHTTPSocketServer;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpUpgradeHandler;
-import javax.servlet.http.WebConnection;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
@@ -66,15 +64,6 @@ public class JettyHTTPSocketServer implements IHTTPSocketServer {
 
     public void setHandler(IHTTPSocketHandler handler) {
         this.handler = handler;
-    }
-
-    private static class DummyUpgradeHandler implements HttpUpgradeHandler {
-        public void init(WebConnection webConnection) {
-
-        }
-        public void destroy() {
-
-        }
     }
 
 }

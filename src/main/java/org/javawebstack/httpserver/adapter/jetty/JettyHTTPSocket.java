@@ -1,11 +1,11 @@
 package org.javawebstack.httpserver.adapter.jetty;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.javawebstack.httpserver.HTTPMethod;
 import org.javawebstack.httpserver.HTTPStatus;
 import org.javawebstack.httpserver.adapter.IHTTPSocket;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
