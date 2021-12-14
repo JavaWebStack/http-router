@@ -21,8 +21,6 @@ public class InternalWebSocketRequestHandler implements RequestHandler {
     public Object handle(Exchange exchange) {
         IHTTPSocket socket = exchange.socket();
         try {
-            if(!WebSocketUtil.accept(socket, null))
-                return null;
             WebSocket webSocket = new WebSocket(exchange);
             handler.onConnect(webSocket);
             WebSocketFrame frame;

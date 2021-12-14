@@ -2,6 +2,7 @@ package org.javawebstack.httpserver.adapter.simple;
 
 import org.javawebstack.httpserver.adapter.IHTTPSocketHandler;
 import org.javawebstack.httpserver.adapter.IHTTPSocketServer;
+import org.javawebstack.httpserver.util.websocket.WebSocketUtil;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -23,7 +24,17 @@ public class SimpleHTTPSocketServer implements IHTTPSocketServer {
                 try {
                     Socket socket = serverSocket.accept();
                     SimpleHTTPSocket httpSocket = new SimpleHTTPSocket(socket);
-                    executorService.execute(() -> handler.handle(httpSocket));
+                    executorService.execute(() -> {
+                        if(httpSocket.getRequestHeaderNames().contains("sec-websocket-key")) {
+                            try {
+                                if(!WebSocketUtil.accept(httpSocket, null))
+                                    return;
+                            } catch (IOException e) {
+                                return;
+                            }
+                        }
+                        handler.handle(httpSocket);
+                    });
                 } catch (IOException exception) {}
             }
         });

@@ -1,6 +1,5 @@
-package org.javawebstack.httpserver.adapter.untertow;
+package org.javawebstack.httpserver.adapter.undertow;
 
-import io.undertow.server.BlockingHttpExchange;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 import io.undertow.util.HttpString;
@@ -17,24 +16,29 @@ import java.util.stream.Collectors;
 public class UndertowHTTPSocket implements IHTTPSocket {
 
     private final HttpServerExchange exchange;
-    private final BlockingHttpExchange blockingExchange;
+    private final InputStream inputStream;
+    private final OutputStream outputStream;
+    private boolean closed;
 
-    public UndertowHTTPSocket(HttpServerExchange exchange) {
+    public UndertowHTTPSocket(HttpServerExchange exchange, InputStream inputStream, OutputStream outputStream) {
         this.exchange = exchange;
-        this.blockingExchange = exchange.startBlocking();
+        this.inputStream = inputStream == null ? exchange.getInputStream() : inputStream;
+        this.outputStream = outputStream == null ? exchange.getOutputStream() : outputStream;
     }
 
     public InputStream getInputStream() throws IOException {
-        return exchange.getInputStream();
+        return inputStream;
     }
 
     public OutputStream getOutputStream() throws IOException {
-        return exchange.getOutputStream();
+        return outputStream;
     }
 
     public void close() throws IOException {
-        blockingExchange.close();
-        exchange.endExchange();
+        if(closed)
+            return;
+        closed = true;
+        exchange.getOutputStream().close();
     }
 
     public boolean isClosed() {
@@ -102,7 +106,7 @@ public class UndertowHTTPSocket implements IHTTPSocket {
     }
 
     public void writeHeaders() throws IOException {
-        exchange.getResponseSender().send("");
+        exchange.getOutputStream().write(new byte[0]);
     }
 
     public String getRemoteAddress() {

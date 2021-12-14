@@ -98,11 +98,11 @@ public class WebSocketFrame {
 
     public static WebSocketFrame read(InputStream stream) throws IOException {
         WebSocketFrame frame = new WebSocketFrame();
-        int b = safeRead(stream);
+        byte b = safeRead(stream);
         frame.flags = (byte) (b & 0xF0);
         frame.opcode = (byte) (b & 0x0F);
         b = safeRead(stream);
-        frame.maskKey = (b >> 7) == 1 ? new byte[4] : null;
+        frame.maskKey = ((b & 0xFF) >> 7) == 1 ? new byte[4] : null;
         int len = b & 0b0111_1111;
         if(len == 126) {
             len = safeRead(stream) << 8;
@@ -114,10 +114,10 @@ public class WebSocketFrame {
             len |= safeRead(stream);
         }
         if(frame.maskKey != null) {
-            frame.maskKey[0] = (byte) safeRead(stream);
-            frame.maskKey[1] = (byte) safeRead(stream);
-            frame.maskKey[2] = (byte) safeRead(stream);
-            frame.maskKey[3] = (byte) safeRead(stream);
+            frame.maskKey[0] = safeRead(stream);
+            frame.maskKey[1] = safeRead(stream);
+            frame.maskKey[2] = safeRead(stream);
+            frame.maskKey[3] = safeRead(stream);
         }
         frame.payload = new byte[len];
         if(frame.maskKey != null) {
@@ -125,16 +125,16 @@ public class WebSocketFrame {
                 frame.payload[i] = (byte) (safeRead(stream) ^ frame.maskKey[i % 4]);
         } else {
             for(int i=0; i<len; i++)
-                frame.payload[i] = (byte) safeRead(stream);
+                frame.payload[i] = safeRead(stream);
         }
         return frame;
     }
 
-    private static int safeRead(InputStream stream) throws IOException {
+    private static byte safeRead(InputStream stream) throws IOException {
         int b = stream.read();
         if(b == -1)
             throw new IOException("Unexpected end of stream");
-        return b;
+        return (byte) b;
     }
 
 }
