@@ -1,5 +1,6 @@
 package org.javawebstack.httpserver.adapter.untertow;
 
+import io.undertow.server.BlockingHttpExchange;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
 import io.undertow.util.HttpString;
@@ -16,9 +17,11 @@ import java.util.stream.Collectors;
 public class UndertowHTTPSocket implements IHTTPSocket {
 
     private final HttpServerExchange exchange;
+    private final BlockingHttpExchange blockingExchange;
 
     public UndertowHTTPSocket(HttpServerExchange exchange) {
         this.exchange = exchange;
+        this.blockingExchange = exchange.startBlocking();
     }
 
     public InputStream getInputStream() throws IOException {
@@ -30,6 +33,7 @@ public class UndertowHTTPSocket implements IHTTPSocket {
     }
 
     public void close() throws IOException {
+        blockingExchange.close();
         exchange.endExchange();
     }
 
