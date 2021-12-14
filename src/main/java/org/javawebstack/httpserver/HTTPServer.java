@@ -4,7 +4,6 @@ import org.javawebstack.abstractdata.AbstractMapper;
 import org.javawebstack.abstractdata.NamingPolicy;
 import org.javawebstack.httpserver.adapter.IHTTPSocketServer;
 import org.javawebstack.httpserver.adapter.jetty.JettyHTTPSocketServer;
-import org.javawebstack.httpserver.adapter.simple.SimpleHTTPSocketServer;
 import org.javawebstack.httpserver.handler.*;
 import org.javawebstack.httpserver.router.DefaultRouteAutoInjector;
 import org.javawebstack.httpserver.router.Route;
