@@ -3,7 +3,7 @@ package org.javawebstack.httpserver;
 import org.javawebstack.abstractdata.AbstractMapper;
 import org.javawebstack.abstractdata.NamingPolicy;
 import org.javawebstack.httpserver.adapter.IHTTPSocketServer;
-import org.javawebstack.httpserver.adapter.jetty.JettyHTTPSocketServer;
+import org.javawebstack.httpserver.adapter.undertow.UndertowHTTPSocketServer;
 import org.javawebstack.httpserver.handler.*;
 import org.javawebstack.httpserver.router.DefaultRouteAutoInjector;
 import org.javawebstack.httpserver.router.Route;
@@ -45,7 +45,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private Function<Class<?>, Object> controllerInitiator = this::defaultControllerInitiator;
 
     public HTTPServer() {
-        this(new JettyHTTPSocketServer());
+        this(new UndertowHTTPSocketServer());
     }
 
     public HTTPServer(IHTTPSocketServer server) {
