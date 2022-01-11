@@ -54,6 +54,11 @@ public class HTTPServer implements RouteParamTransformerProvider {
         routeAutoInjectors.add(DefaultRouteAutoInjector.INSTANCE);
     }
 
+    public HTTPServer maxThreads(int maxThreads) {
+        this.server.setMaxThreads(maxThreads);
+        return this;
+    }
+
     public HTTPServer logger(Logger logger) {
         this.logger = logger;
         return this;

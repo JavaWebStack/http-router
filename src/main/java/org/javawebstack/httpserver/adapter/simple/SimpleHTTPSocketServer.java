@@ -7,8 +7,7 @@ import org.javawebstack.httpserver.util.websocket.WebSocketUtil;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 public class SimpleHTTPSocketServer implements IHTTPSocketServer {
 
@@ -16,6 +15,7 @@ public class SimpleHTTPSocketServer implements IHTTPSocketServer {
     private ExecutorService executorService;
     private ServerSocket serverSocket;
     private int port = 80;
+    private int maxThreads = 64;
     private IHTTPSocketHandler handler;
 
     public SimpleHTTPSocketServer() {
@@ -52,9 +52,13 @@ public class SimpleHTTPSocketServer implements IHTTPSocketServer {
         this.handler = handler;
     }
 
+    public void setMaxThreads(int maxThreads) {
+        this.maxThreads = maxThreads;
+    }
+
     public void start() throws IOException {
         this.serverSocket = new ServerSocket(port);
-        this.executorService = Executors.newCachedThreadPool();
+        this.executorService = new ThreadPoolExecutor(1, maxThreads, 60L, TimeUnit.SECONDS, new SynchronousQueue());
         this.schedulerThread.start();
     }
 
