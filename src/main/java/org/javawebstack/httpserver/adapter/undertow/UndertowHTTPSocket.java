@@ -46,7 +46,8 @@ public class UndertowHTTPSocket implements IHTTPSocket {
     }
 
     public IHTTPSocket setResponseStatus(int status, String message) {
-        exchange.setStatusCode(status);
+        if(!exchange.isResponseStarted())
+            exchange.setStatusCode(status);
         return this;
     }
 
