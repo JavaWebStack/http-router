@@ -25,12 +25,13 @@ public class UndertowHTTPSocket implements IHTTPSocket {
         InputStream is = inputStream == null ? exchange.getInputStream() : inputStream;
         this.inputStream = new InputStream() {
             public int read() throws IOException {
-                int b = is.read();
-                while (b == -1 && !exchange.isRequestComplete()) {
-                    Thread.yield();
-                    b = is.read();
-                }
-                return b;
+                return is.read();
+            }
+            public int available() throws IOException {
+                int a = is.available();
+                if(a == 0 && !exchange.isRequestComplete())
+                    a = 1;
+                return a;
             }
         };
         this.outputStream = outputStream == null ? exchange.getOutputStream() : outputStream;
