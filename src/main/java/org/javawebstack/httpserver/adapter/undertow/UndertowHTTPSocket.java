@@ -22,7 +22,17 @@ public class UndertowHTTPSocket implements IHTTPSocket {
 
     public UndertowHTTPSocket(HttpServerExchange exchange, InputStream inputStream, OutputStream outputStream) {
         this.exchange = exchange;
-        this.inputStream = inputStream == null ? exchange.getInputStream() : inputStream;
+        InputStream is = inputStream == null ? exchange.getInputStream() : inputStream;
+        this.inputStream = new InputStream() {
+            public int read() throws IOException {
+                int b = is.read();
+                while (b == -1 && !exchange.isRequestComplete()) {
+                    Thread.yield();
+                    b = is.read();
+                }
+                return b;
+            }
+        };
         this.outputStream = outputStream == null ? exchange.getOutputStream() : outputStream;
     }
 
