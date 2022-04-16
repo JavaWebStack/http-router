@@ -185,7 +185,7 @@ public class RouteBinder {
 
     private static List<Method> getMethodsRecursive(Class<?> type) {
         List<Method> methods = new ArrayList<>(Arrays.asList(type.getDeclaredMethods()));
-        if (type.getSuperclass() != null)
+        if (type.getSuperclass() != null && type.getSuperclass() != Object.class)
             methods.addAll(getMethodsRecursive(type.getSuperclass()));
         return methods;
     }
