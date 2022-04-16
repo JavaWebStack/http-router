@@ -42,7 +42,7 @@ public class RouteBinder {
             }
         }
         Map<String, WebSocketBindHandler> websocketHandlers = new HashMap<>();
-        for (Method method : controller.getClass().getDeclaredMethods()) {
+        for (Method method : getMethodsRecursive(controller.getClass())) {
             List<Bind> binds = new ArrayList<>();
             With methodWith = getAnnotations(With.class, method).stream().findFirst().orElse(null);
             List<String> middlewares = new ArrayList<>();
@@ -181,6 +181,13 @@ public class RouteBinder {
             return null;
         T[] annotations = parameters[param].getDeclaredAnnotationsByType(type);
         return annotations.length == 0 ? null : annotations[0];
+    }
+
+    private static List<Method> getMethodsRecursive(Class<?> type) {
+        List<Method> methods = new ArrayList<>(Arrays.asList(type.getDeclaredMethods()));
+        if (type.getSuperclass() != null && type.getSuperclass() != Object.class)
+            methods.addAll(getMethodsRecursive(type.getSuperclass()));
+        return methods;
     }
 
     private static class BindMapper {
