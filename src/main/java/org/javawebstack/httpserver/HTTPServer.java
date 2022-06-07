@@ -43,6 +43,7 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private final Map<String, RequestHandler> beforeMiddleware = new HashMap<>();
     private final Map<String, AfterRequestHandler> afterMiddleware = new HashMap<>();
     private Function<Class<?>, Object> controllerInitiator = this::defaultControllerInitiator;
+    private boolean formMethods = true;
 
     public HTTPServer() {
         this(new UndertowHTTPSocketServer());
@@ -415,4 +416,12 @@ public class HTTPServer implements RouteParamTransformerProvider {
         return exceptionHandler;
     }
 
+    public boolean isFormMethods() {
+        return formMethods;
+    }
+
+    public HTTPServer disableFormMethods() {
+        formMethods = false;
+        return this;
+    }
 }

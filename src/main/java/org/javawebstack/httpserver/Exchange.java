@@ -11,6 +11,7 @@ import org.javawebstack.validator.Validator;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,7 +36,7 @@ public class Exchange {
     public Exchange(HTTPServer server, IHTTPSocket socket) {
         this.server = server;
         this.socket = socket;
-        this.method = "websocket".equalsIgnoreCase(socket.getRequestHeader("upgrade")) ? HTTPMethod.WEBSOCKET : socket.getRequestMethod();
+        this.method = getRequestMethodFromSocket(socket);
         this.queryParameters = AbstractElement.fromFormData(socket.getRequestQuery()).object();
     }
 
@@ -52,13 +53,7 @@ public class Exchange {
         if (body.length() == 0)
             body = "{}";
 
-        String contentType = getContentType().toLowerCase();
-
-        if (contentType.contains(";")) {
-            contentType = contentType.split(";")[0].trim();
-        }
-
-        MimeType type = MimeType.byMimeType(contentType);
+        MimeType type = getMimeType();
         if (type == null)
             type = MimeType.JSON;
         AbstractElement request = null;
@@ -292,4 +287,23 @@ public class Exchange {
         return getPathElement(getPathElement(source, spl[0]), path.substring(spl[0].length() + 1));
     }
 
+    private HTTPMethod getRequestMethodFromSocket(IHTTPSocket socket) {
+        if (socket.getRequestHeader("upgrade").equalsIgnoreCase("websocket"))
+            return HTTPMethod.WEBSOCKET;
+        if ((socket.getRequestMethod() == HTTPMethod.GET || socket.getRequestMethod() == HTTPMethod.POST) && getMimeType() == MimeType.X_WWW_FORM_URLENCODED) {
+            String rawMethodOverride = getBodyPathElement("_method").string();
+            if (rawMethodOverride != null)
+                return HTTPMethod.valueOf(rawMethodOverride);
+        }
+        return socket.getRequestMethod();
+    }
+
+    public MimeType getMimeType() {
+        String contentType = getContentType().toLowerCase();
+        if (contentType.contains(";")) {
+            contentType = contentType.split(";")[0].trim();
+        }
+
+        return MimeType.byMimeType(contentType);
+    }
 }
