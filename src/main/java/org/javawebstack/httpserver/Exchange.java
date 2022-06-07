@@ -290,7 +290,7 @@ public class Exchange {
     private HTTPMethod getRequestMethodFromSocket(IHTTPSocket socket) {
         if ("websocket".equalsIgnoreCase(socket.getRequestHeader("upgrade")))
             return HTTPMethod.WEBSOCKET;
-        if ((socket.getRequestMethod() == HTTPMethod.GET || socket.getRequestMethod() == HTTPMethod.POST) && getMimeType() == MimeType.X_WWW_FORM_URLENCODED) {
+        if (server.isFormMethods() && (socket.getRequestMethod() == HTTPMethod.GET || socket.getRequestMethod() == HTTPMethod.POST) && getMimeType() == MimeType.X_WWW_FORM_URLENCODED) {
             String rawMethodOverride = getBodyPathElement("_method").string();
             if (rawMethodOverride != null)
                 return HTTPMethod.valueOf(rawMethodOverride);
