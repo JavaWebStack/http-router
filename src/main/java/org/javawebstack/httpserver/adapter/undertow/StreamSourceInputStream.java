@@ -22,8 +22,8 @@ public class StreamSourceInputStream extends InputStream {
             Thread.yield();
         if(r == -1)
             return -1;
-        int b = byteBuffer.position(0).get();
-        return b;
+        byteBuffer.position(0);
+        return byteBuffer.get();
     }
 
 }
