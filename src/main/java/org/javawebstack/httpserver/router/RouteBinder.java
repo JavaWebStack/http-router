@@ -1,11 +1,11 @@
 package org.javawebstack.httpserver.router;
 
 import org.javawebstack.httpserver.Exchange;
+import org.javawebstack.httpserver.HTTPMethod;
 import org.javawebstack.httpserver.HTTPServer;
 import org.javawebstack.httpserver.handler.AfterRequestHandler;
 import org.javawebstack.httpserver.handler.RequestHandler;
 import org.javawebstack.httpserver.handler.WebSocketHandler;
-import org.javawebstack.httpserver.helper.HttpMethod;
 import org.javawebstack.httpserver.router.annotation.PathPrefix;
 import org.javawebstack.httpserver.router.annotation.With;
 import org.javawebstack.httpserver.router.annotation.params.*;
@@ -33,16 +33,16 @@ public class RouteBinder {
             prefixes.add("");
         With with = Arrays.stream(controller.getClass().getDeclaredAnnotationsByType(With.class)).findFirst().orElse(null);
         class Bind {
-            final HttpMethod method;
+            final HTTPMethod method;
             final String path;
 
-            public Bind(HttpMethod method, String path) {
+            public Bind(HTTPMethod method, String path) {
                 this.method = method;
                 this.path = path;
             }
         }
         Map<String, WebSocketBindHandler> websocketHandlers = new HashMap<>();
-        for (Method method : controller.getClass().getDeclaredMethods()) {
+        for (Method method : getMethodsRecursive(controller.getClass())) {
             List<Bind> binds = new ArrayList<>();
             With methodWith = getAnnotations(With.class, method).stream().findFirst().orElse(null);
             List<String> middlewares = new ArrayList<>();
@@ -54,41 +54,41 @@ public class RouteBinder {
             // Registering HTTP-Method annotations.
             //region Registering HTTP-Method Annotations
             for (Get a : getAnnotations(Get.class, method)) {
-                bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.GET, a.value()));
+                bindMiddlewares(HTTPMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HTTPMethod.GET, a.value()));
             }
             for (Post a : getAnnotations(Post.class, method)) {
-                bindMiddlewares(HttpMethod.POST, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.POST, a.value()));
+                bindMiddlewares(HTTPMethod.POST, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HTTPMethod.POST, a.value()));
             }
             for (Put a : getAnnotations(Put.class, method)) {
-                bindMiddlewares(HttpMethod.PUT, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.PUT, a.value()));
+                bindMiddlewares(HTTPMethod.PUT, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HTTPMethod.PUT, a.value()));
             }
             for (Delete a : getAnnotations(Delete.class, method)) {
-                bindMiddlewares(HttpMethod.DELETE, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.DELETE, a.value()));
+                bindMiddlewares(HTTPMethod.DELETE, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HTTPMethod.DELETE, a.value()));
             }
             for (Patch a : getAnnotations(Patch.class, method)) {
-                bindMiddlewares(HttpMethod.PATCH, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.PATCH, a.value()));
+                bindMiddlewares(HTTPMethod.PATCH, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HTTPMethod.PATCH, a.value()));
             }
             for (Trace a : getAnnotations(Trace.class, method)) {
-                bindMiddlewares(HttpMethod.TRACE, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.TRACE, a.value()));
+                bindMiddlewares(HTTPMethod.TRACE, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HTTPMethod.TRACE, a.value()));
             }
             for (Options a : getAnnotations(Options.class, method)) {
-                bindMiddlewares(HttpMethod.OPTIONS, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.OPTIONS, a.value()));
+                bindMiddlewares(HTTPMethod.OPTIONS, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HTTPMethod.OPTIONS, a.value()));
             }
             for (Head a : getAnnotations(Head.class, method)) {
-                bindMiddlewares(HttpMethod.HEAD, globalPrefix, prefixes, a.value(), middlewares);
-                binds.add(new Bind(HttpMethod.HEAD, a.value()));
+                bindMiddlewares(HTTPMethod.HEAD, globalPrefix, prefixes, a.value(), middlewares);
+                binds.add(new Bind(HTTPMethod.HEAD, a.value()));
             }
             for (WebSocketMessage a : getAnnotations(WebSocketMessage.class, method)) {
                 WebSocketBindHandler handler = websocketHandlers.get(a.name());
                 if (handler == null) {
-                    bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
+                    bindMiddlewares(HTTPMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
                     handler = new WebSocketBindHandler();
                     for (String prefix : prefixes)
                         server.webSocket(buildPattern(globalPrefix, prefix, a.value()), handler);
@@ -99,7 +99,7 @@ public class RouteBinder {
             for (WebSocketConnect a : getAnnotations(WebSocketConnect.class, method)) {
                 WebSocketBindHandler handler = websocketHandlers.get(a.name());
                 if (handler == null) {
-                    bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
+                    bindMiddlewares(HTTPMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
                     handler = new WebSocketBindHandler();
                     for (String prefix : prefixes)
                         server.webSocket(buildPattern(globalPrefix, prefix, a.value()), handler);
@@ -110,7 +110,7 @@ public class RouteBinder {
             for (WebSocketClose a : getAnnotations(WebSocketClose.class, method)) {
                 WebSocketBindHandler handler = websocketHandlers.get(a.name());
                 if (handler == null) {
-                    bindMiddlewares(HttpMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
+                    bindMiddlewares(HTTPMethod.GET, globalPrefix, prefixes, a.value(), middlewares);
                     handler = new WebSocketBindHandler();
                     for (String prefix : prefixes)
                         server.webSocket(buildPattern(globalPrefix, prefix, a.value()), handler);
@@ -131,7 +131,7 @@ public class RouteBinder {
         }
     }
 
-    private void bindMiddlewares(HttpMethod method, String globalPrefix, List<String> prefixes, String path, List<String> middlewares) {
+    private void bindMiddlewares(HTTPMethod method, String globalPrefix, List<String> prefixes, String path, List<String> middlewares) {
         for (String name : middlewares) {
             RequestHandler before = server.getBeforeMiddleware(name);
             AfterRequestHandler after = server.getAfterMiddleware(name);
@@ -181,6 +181,13 @@ public class RouteBinder {
             return null;
         T[] annotations = parameters[param].getDeclaredAnnotationsByType(type);
         return annotations.length == 0 ? null : annotations[0];
+    }
+
+    private static List<Method> getMethodsRecursive(Class<?> type) {
+        List<Method> methods = new ArrayList<>(Arrays.asList(type.getDeclaredMethods()));
+        if (type.getSuperclass() != null && type.getSuperclass() != Object.class)
+            methods.addAll(getMethodsRecursive(type.getSuperclass()));
+        return methods;
     }
 
     private static class BindMapper {
@@ -279,7 +286,15 @@ public class RouteBinder {
                 }});
         }
 
-        public void onClose(WebSocket socket, int code, String reason) {
+        public void onMessage(WebSocket socket, byte[] message) {
+            if (messageHandler != null)
+                messageHandler.invoke(socket.getExchange(), new HashMap<String, Object>() {{
+                    put("websocket", socket);
+                    put("websocketMessage", message);
+                }});
+        }
+
+        public void onClose(WebSocket socket, Integer code, String reason) {
             if (closeHandler != null)
                 closeHandler.invoke(socket.getExchange(), new HashMap<String, Object>() {{
                     put("websocket", socket);

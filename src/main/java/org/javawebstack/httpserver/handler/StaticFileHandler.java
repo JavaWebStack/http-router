@@ -1,7 +1,7 @@
 package org.javawebstack.httpserver.handler;
 
 import org.javawebstack.httpserver.Exchange;
-import org.javawebstack.httpserver.helper.MimeType;
+import org.javawebstack.httpserver.util.MimeType;
 import org.javawebstack.httpserver.util.FileProvider;
 
 import java.io.IOException;

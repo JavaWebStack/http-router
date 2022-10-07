@@ -7,7 +7,7 @@
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-        <buildVersion>1.0.1-SNAPSHOT</buildVersion>
+        <buildVersion>1.0.2-SNAPSHOT</buildVersion>
     </properties>
 
     <groupId>org.javawebstack</groupId>
@@ -32,6 +32,12 @@
             <organization>JavaWebStack</organization>
             <organizationUrl>https://javawebstack.org</organizationUrl>
         </developer>
+        <developer>
+            <name>Julian Gojani</name>
+            <email>julian@gojani.xyz</email>
+            <organization>JavaWebStack</organization>
+            <organizationUrl>https://javawebstack.org</organizationUrl>
+        </developer>
     </developers>
 
     <scm>
@@ -44,17 +50,7 @@
         <dependency>
             <groupId>org.javawebstack</groupId>
             <artifactId>validator</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-            <version>9.4.44.v20210927</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty.websocket</groupId>
-            <artifactId>websocket-server</artifactId>
-            <version>9.4.43.v20210629</version>
+            <version>1.0.1</version>
         </dependency>
         <dependency>
             <groupId>org.reflections</groupId>
@@ -64,12 +60,24 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
-            <version>5.8.1</version>
+            <version>5.9.0</version>
         </dependency>
+        <dependency>
+            <groupId>io.undertow</groupId>
+            <artifactId>undertow-core</artifactId>
+            <version>2.2.19.Final</version>
+        </dependency>
+        <!--- Temporary fix for transitive vulnerabilities -->
+        <dependency>
+            <groupId>org.jboss.xnio</groupId>
+            <artifactId>xnio-api</artifactId>
+            <version>3.8.8.Final</version>
+        </dependency>
+        <!--- ============================================ -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.8.1</version>
+            <version>5.9.0</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

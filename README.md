@@ -25,6 +25,6 @@ work-in-progress project though so it's not yet complete.
 <dependency>
     <groupId>org.javawebstack</groupId>
     <artifactId>http-server</artifactId>
-    <version>1.0.1</version>
+    <version>1.0.2</version>
 </dependency>
 ```

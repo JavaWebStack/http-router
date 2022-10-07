@@ -7,5 +7,7 @@ public interface WebSocketHandler {
 
     void onMessage(WebSocket socket, String message);
 
-    void onClose(WebSocket socket, int code, String reason);
+    void onMessage(WebSocket socket, byte[] message);
+
+    void onClose(WebSocket socket, Integer code, String reason);
 }

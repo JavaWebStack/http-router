@@ -1,24 +1,21 @@
 package org.javawebstack.httpserver;
 
-import org.javawebstack.abstractdata.AbstractElement;
-import org.javawebstack.abstractdata.AbstractMapper;
-import org.javawebstack.abstractdata.AbstractNull;
-import org.javawebstack.abstractdata.AbstractObject;
-import org.javawebstack.httpserver.helper.HttpMethod;
-import org.javawebstack.httpserver.helper.MimeType;
+import org.javawebstack.abstractdata.*;
+import org.javawebstack.httpserver.adapter.IHTTPSocket;
+import org.javawebstack.httpserver.util.MimeType;
 import org.javawebstack.validator.ValidationContext;
 import org.javawebstack.validator.ValidationException;
 import org.javawebstack.validator.ValidationResult;
 import org.javawebstack.validator.Validator;
 
-import javax.servlet.MultipartConfigElement;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Exchange {
 
@@ -29,22 +26,18 @@ public class Exchange {
     }
 
     private final HTTPServer server;
-    private final HttpMethod method;
-    private final String path;
+    private final HTTPMethod method;
     private byte[] body = null;
     private final Map<String, Object> pathVariables = new HashMap<>();
     private final AbstractObject queryParameters;
-    private final HttpServletRequest request;
-    private final HttpServletResponse response;
+    private final IHTTPSocket socket;
     private final Map<String, Object> attributes = new HashMap<>();
 
-    public Exchange(HTTPServer server, HttpServletRequest request, HttpServletResponse response) {
+    public Exchange(HTTPServer server, IHTTPSocket socket) {
         this.server = server;
-        this.request = request;
-        this.response = response;
-        this.path = request.getPathInfo();
-        this.method = "websocket".equalsIgnoreCase(request.getHeader("Upgrade")) ? HttpMethod.WEBSOCKET : HttpMethod.valueOf(request.getMethod());
-        this.queryParameters = AbstractElement.fromFormData(request.getQueryString()).object();
+        this.socket = socket;
+        this.method = getRequestMethodFromSocket(socket);
+        this.queryParameters = AbstractElement.fromFormData(socket.getRequestQuery()).object();
     }
 
     public <T> T body(Class<T> clazz) {
@@ -60,30 +53,24 @@ public class Exchange {
         if (body.length() == 0)
             body = "{}";
 
-        String contentType = getContentType().toLowerCase();
-
-        if (contentType.contains(";")) {
-            contentType = contentType.split(";")[0].trim();
-        }
-
-        MimeType type = MimeType.byMimeType(contentType);
+        MimeType type = getMimeType();
         if (type == null)
             type = MimeType.JSON;
-        AbstractElement request = AbstractNull.INSTANCE;
+        AbstractElement request = null;
+        boolean arrayLike = clazz.isArray() || Collection.class.isAssignableFrom(clazz);
         switch (type) {
             case JSON:
                 request = AbstractElement.fromJson(body);
                 break;
             case YAML:
-                request = AbstractElement.fromYaml(body, !(clazz.isArray() || Collection.class.isAssignableFrom(clazz)));
+                request = AbstractElement.fromYaml(body, !arrayLike);
                 break;
             case X_WWW_FORM_URLENCODED:
                 request = AbstractElement.fromFormData(body);
                 break;
-            default:
-                request = new AbstractObject();
-                break;
         }
+        if(request == null || request.isNull())
+            request = arrayLike ? new AbstractArray() : new AbstractObject();
         ValidationResult result = Validator.getValidator(clazz).validate(new ValidationContext().attrib("exchange", this), request);
         if (!result.isValid())
             throw new ValidationException(result);
@@ -94,22 +81,23 @@ public class Exchange {
         return server;
     }
 
-    public HttpMethod getMethod() {
+    public HTTPMethod getMethod() {
         return method;
     }
 
     public String getPath() {
-        return path;
+        return socket.getRequestPath();
     }
 
     public String getContentType() {
-        return request.getContentType() != null ? request.getContentType() : "";
+        String contentType = socket.getRequestHeader("content-type");
+        return contentType != null ? contentType : "";
     }
 
     public byte[] read() {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
-            InputStream is = request.getInputStream();
+            InputStream is = socket.getInputStream();
             byte[] data = new byte[1024];
             int r;
             while (is.available() > 0) {
@@ -129,8 +117,8 @@ public class Exchange {
 
     public Exchange write(byte[] bytes) {
         try {
-            response.getOutputStream().write(bytes);
-            response.getOutputStream().flush();
+            socket.getOutputStream().write(bytes);
+            socket.getOutputStream().flush();
         } catch (IOException ignored) {
         }
         return this;
@@ -138,8 +126,8 @@ public class Exchange {
 
     public Exchange write(byte[] bytes, int offset, int length) {
         try {
-            response.getOutputStream().write(bytes, offset, length);
-            response.getOutputStream().flush();
+            socket.getOutputStream().write(bytes, offset, length);
+            socket.getOutputStream().flush();
         } catch (IOException ignored) {
         }
         return this;
@@ -156,49 +144,50 @@ public class Exchange {
 
     public Exchange close() {
         try {
-            response.getOutputStream().close();
+            socket.close();
         } catch (IOException ignored) {
         }
         return this;
     }
 
     public Exchange header(String header, String value) {
-        if (header.equalsIgnoreCase("content-type")) {
-            response.setContentType(value);
-            return this;
-        }
-        response.setHeader(header, value);
+        socket.setResponseHeader(header, value);
         return this;
     }
 
     public Exchange status(int code) {
-        response.setStatus(code);
+        socket.setResponseStatus(code);
         return this;
     }
 
     public String header(String header) {
-        return request.getHeader(header);
+        return socket.getRequestHeader(header);
     }
 
     public Exchange redirect(String url) {
-        response.setStatus(302);
+        socket.setResponseStatus(302);
+        socket.setResponseHeader("location", url);
         try {
-            response.sendRedirect(url);
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            socket.writeHeaders();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         return this;
     }
 
     public List<Locale> locales() {
-        return Collections.list(request.getLocales());
+        String locale = socket.getRequestHeader("accept-language");
+        if(locale == null)
+            return new ArrayList<>();
+        return Stream.of(locale.split(" ?,")).map(s -> s.split(";")[0]).map(Locale::forLanguageTag).collect(Collectors.toList());
     }
 
     public Locale locale(Locale... possible) {
+        List<Locale> requested = locales();
         if (possible.length == 0)
-            return request.getLocale();
+            return requested.size() > 0 ? requested.get(0) : null;
         List<Locale> possibleList = Arrays.asList(possible);
-        for (Locale l : locales()) {
+        for (Locale l : requested) {
             if (possibleList.contains(l))
                 return l;
         }
@@ -212,15 +201,11 @@ public class Exchange {
     public Exchange contentType(String contentType) {
         if (contentType == null || contentType.equals(""))
             return contentType("text/plain");
-        return header("Content-Type", contentType);
+        return header("content-type", contentType);
     }
 
-    public HttpServletRequest rawRequest() {
-        return request;
-    }
-
-    public HttpServletResponse rawResponse() {
-        return response;
+    public IHTTPSocket socket() {
+        return socket;
     }
 
     public <T> T attrib(String key) {
@@ -258,7 +243,7 @@ public class Exchange {
     }
 
     public String remoteAddr() {
-        return request.getRemoteAddr();
+        return socket.getRemoteAddress();
     }
 
     public Map<String, Object> getPathVariables() {
@@ -302,24 +287,23 @@ public class Exchange {
         return getPathElement(getPathElement(source, spl[0]), path.substring(spl[0].length() + 1));
     }
 
-    public Exchange enableMultipart() {
-        enableMultipart(System.getProperty("java.io.tmpdir"));
-        return this;
+    private HTTPMethod getRequestMethodFromSocket(IHTTPSocket socket) {
+        if ("websocket".equalsIgnoreCase(socket.getRequestHeader("upgrade")))
+            return HTTPMethod.WEBSOCKET;
+        if (server.isFormMethods() && (socket.getRequestMethod() == HTTPMethod.GET || socket.getRequestMethod() == HTTPMethod.POST) && getMimeType() == MimeType.X_WWW_FORM_URLENCODED) {
+            String rawMethodOverride = getBodyPathElement("_method").string();
+            if (rawMethodOverride != null)
+                return HTTPMethod.valueOf(rawMethodOverride);
+        }
+        return socket.getRequestMethod();
     }
 
-    public Exchange enableMultipart(String location) {
-        enableMultipart(location, -1L);
-        return this;
-    }
+    public MimeType getMimeType() {
+        String contentType = getContentType().toLowerCase();
+        if (contentType.contains(";")) {
+            contentType = contentType.split(";")[0].trim();
+        }
 
-    public Exchange enableMultipart(String location, long maxFileSize) {
-        enableMultipart(location, maxFileSize, 1_048_576);
-        return this;
-    }
-
-
-    public Exchange enableMultipart(String location, long maxFileSize, int fileSizeThreshold) {
-        request.setAttribute("org.eclipse.jetty.multipartConfig", new MultipartConfigElement(location, maxFileSize, -1L, fileSizeThreshold));
-        return this;
+        return MimeType.byMimeType(contentType);
     }
 }
