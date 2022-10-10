@@ -291,9 +291,12 @@ public class Exchange {
         if ("websocket".equalsIgnoreCase(socket.getRequestHeader("upgrade")))
             return HTTPMethod.WEBSOCKET;
         if (server.isFormMethods() && (socket.getRequestMethod() == HTTPMethod.GET || socket.getRequestMethod() == HTTPMethod.POST) && getMimeType() == MimeType.X_WWW_FORM_URLENCODED) {
-            String rawMethodOverride = getBodyPathElement("_method").string();
-            if (rawMethodOverride != null)
-                return HTTPMethod.valueOf(rawMethodOverride);
+            AbstractElement e = getBodyPathElement("_method");
+            if (e != null) {
+                try {
+                    return HTTPMethod.valueOf(e.string());
+                } catch (IllegalArgumentException ignored) {}
+            }
         }
         return socket.getRequestMethod();
     }
