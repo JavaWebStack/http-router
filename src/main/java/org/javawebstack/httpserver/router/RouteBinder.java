@@ -187,7 +187,7 @@ public class RouteBinder {
         List<Method> methods = new ArrayList<>(Arrays.asList(type.getDeclaredMethods()));
         if (type.getSuperclass() != null && type.getSuperclass() != Object.class)
             methods.addAll(getMethodsRecursive(type.getSuperclass()));
-        return methods;
+        return methods.stream().filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     private static class BindMapper {
