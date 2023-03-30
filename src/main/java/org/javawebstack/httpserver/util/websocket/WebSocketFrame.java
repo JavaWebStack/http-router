@@ -74,7 +74,7 @@ public class WebSocketFrame {
         return this;
     }
 
-    public synchronized void write(OutputStream stream) throws IOException {
+    public void write(OutputStream stream) throws IOException {
         stream.write(flags | opcode);
         int lengthByte = payload.length > 125 ? (payload.length > 0xFFFF ? 127 : 126) : payload.length;
         stream.write((maskKey != null ? 0b1000_0000 : 0) | lengthByte);
