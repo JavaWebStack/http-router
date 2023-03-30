@@ -74,7 +74,7 @@ public class WebSocketFrame {
         return this;
     }
 
-    public void write(OutputStream stream) throws IOException {
+    public synchronized void write(OutputStream stream) throws IOException {
         stream.write(flags | opcode);
         int lengthByte = payload.length > 125 ? (payload.length > 0xFFFF ? 127 : 126) : payload.length;
         stream.write((maskKey != null ? 0b1000_0000 : 0) | lengthByte);
@@ -97,37 +97,39 @@ public class WebSocketFrame {
     }
 
     public static WebSocketFrame read(InputStream stream) throws IOException {
-        WebSocketFrame frame = new WebSocketFrame();
-        byte b = safeRead(stream);
-        frame.flags = (byte) (b & 0xF0);
-        frame.opcode = (byte) (b & 0x0F);
-        b = safeRead(stream);
-        frame.maskKey = ((b & 0xFF) >> 7) == 1 ? new byte[4] : null;
-        int len = b & 0b0111_1111;
-        if(len == 126) {
-            len = safeRead(stream) << 8;
-            len |= safeRead(stream);
-        } else if(len == 127) {
-            len = safeRead(stream) << 24;
-            len |= safeRead(stream) << 16;
-            len |= safeRead(stream) << 8;
-            len |= safeRead(stream);
+        synchronized (stream) {
+            WebSocketFrame frame = new WebSocketFrame();
+            byte b = safeRead(stream);
+            frame.flags = (byte) (b & 0xF0);
+            frame.opcode = (byte) (b & 0x0F);
+            b = safeRead(stream);
+            frame.maskKey = ((b & 0xFF) >> 7) == 1 ? new byte[4] : null;
+            int len = b & 0b0111_1111;
+            if(len == 126) {
+                len = safeRead(stream) << 8;
+                len |= safeRead(stream);
+            } else if(len == 127) {
+                len = safeRead(stream) << 24;
+                len |= safeRead(stream) << 16;
+                len |= safeRead(stream) << 8;
+                len |= safeRead(stream);
+            }
+            if(frame.maskKey != null) {
+                frame.maskKey[0] = safeRead(stream);
+                frame.maskKey[1] = safeRead(stream);
+                frame.maskKey[2] = safeRead(stream);
+                frame.maskKey[3] = safeRead(stream);
+            }
+            frame.payload = new byte[len];
+            if(frame.maskKey != null) {
+                for(int i=0; i<len; i++)
+                    frame.payload[i] = (byte) (safeRead(stream) ^ frame.maskKey[i % 4]);
+            } else {
+                for(int i=0; i<len; i++)
+                    frame.payload[i] = safeRead(stream);
+            }
+            return frame;
         }
-        if(frame.maskKey != null) {
-            frame.maskKey[0] = safeRead(stream);
-            frame.maskKey[1] = safeRead(stream);
-            frame.maskKey[2] = safeRead(stream);
-            frame.maskKey[3] = safeRead(stream);
-        }
-        frame.payload = new byte[len];
-        if(frame.maskKey != null) {
-            for(int i=0; i<len; i++)
-                frame.payload[i] = (byte) (safeRead(stream) ^ frame.maskKey[i % 4]);
-        } else {
-            for(int i=0; i<len; i++)
-                frame.payload[i] = safeRead(stream);
-        }
-        return frame;
     }
 
     private static byte safeRead(InputStream stream) throws IOException {
