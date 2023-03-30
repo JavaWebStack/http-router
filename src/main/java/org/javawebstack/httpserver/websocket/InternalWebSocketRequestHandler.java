@@ -20,8 +20,8 @@ public class InternalWebSocketRequestHandler implements RequestHandler {
 
     public Object handle(Exchange exchange) {
         IHTTPSocket socket = exchange.socket();
+        WebSocket webSocket = new WebSocket(exchange);
         try {
-            WebSocket webSocket = new WebSocket(exchange);
             handler.onConnect(webSocket);
             WebSocketFrame frame;
             while (true) {
@@ -48,10 +48,17 @@ public class InternalWebSocketRequestHandler implements RequestHandler {
                 }
                 if(frame.getOpcode() == WebSocketUtil.OP_TEXT) {
                     handler.onMessage(webSocket, new String(frame.getPayload(), StandardCharsets.UTF_8));
-                    continue;
                 }
             }
-        } catch (IOException ignored) {}
+        } catch (IOException e) {
+            handler.onClose(webSocket, null, null);
+            try {
+                socket.close();
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+            throw new RuntimeException(e);
+        }
         return null;
     }
 }
