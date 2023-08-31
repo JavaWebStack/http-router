@@ -68,6 +68,8 @@ public enum MimeType {
     public static MimeType byFileName(String fileName) {
         if (fileName.contains("/")) {
             String[] spl = fileName.split("/");
+            if (spl.length == 0)
+                return PLAIN;
             fileName = spl[spl.length - 1];
         }
         if (!fileName.contains("."))
