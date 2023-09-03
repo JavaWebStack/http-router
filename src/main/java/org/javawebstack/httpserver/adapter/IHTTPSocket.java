@@ -43,7 +43,12 @@ public interface IHTTPSocket {
 
     Set<String> getRequestHeaderNames();
 
-    String getRequestHeader(String name);
+    default String getRequestHeader(String name) {
+        List<String> headers = getRequestHeaders(name);
+        if(headers == null || headers.size() == 0)
+            return null;
+        return headers.get(0);
+    }
 
     List<String> getRequestHeaders(String name);
 

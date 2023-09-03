@@ -19,15 +19,11 @@ public class TestHTTPSocket implements IHTTPSocket {
     private final Map<String, List<String>> requestHeaders = new HashMap<>();
     private final Map<String, List<String>> responseHeaders = new HashMap<>();
 
-    public Map<String, List<String>> getRequestHeaders() {
-        return requestHeaders;
-    }
-
-    public Map<String, List<String>> getResponseHeaders() {
-        return responseHeaders;
-    }
-
     public TestHTTPSocket(HTTPMethod method, String url) {
+        this(method, url, null);
+    }
+
+    public TestHTTPSocket(HTTPMethod method, String url, Map<String, String> headers) {
         this.requestMethod = method;
         String[] pathSplit = url.split("\\?", 2);
         requestPath = pathSplit[0];
@@ -35,6 +31,21 @@ public class TestHTTPSocket implements IHTTPSocket {
             requestQuery = pathSplit[1];
         else
             requestQuery = null;
+        if(headers != null) {
+            headers.entrySet().forEach(e -> {
+                List<String> list = new ArrayList<>();
+                list.add(e.getValue());
+                this.requestHeaders.put(e.getKey(), list);
+            });
+        }
+    }
+
+    public Map<String, List<String>> getRequestHeaders() {
+        return requestHeaders;
+    }
+
+    public Map<String, List<String>> getResponseHeaders() {
+        return responseHeaders;
     }
 
     public TestHTTPSocket setInputStream(InputStream inputStream) {
@@ -91,15 +102,11 @@ public class TestHTTPSocket implements IHTTPSocket {
     }
 
     public Set<String> getRequestHeaderNames() {
-        return Collections.emptySet();
-    }
-
-    public String getRequestHeader(String name) {
-        return null;
+        return requestHeaders.keySet();
     }
 
     public List<String> getRequestHeaders(String name) {
-        return null;
+        return requestHeaders.get(name);
     }
 
     public int getResponseStatus() {
@@ -115,7 +122,7 @@ public class TestHTTPSocket implements IHTTPSocket {
     }
 
     public String getRemoteAddress() {
-        return null;
+        return "127.0.0.1";
     }
 
 }
