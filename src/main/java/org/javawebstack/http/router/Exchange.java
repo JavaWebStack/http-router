@@ -294,8 +294,8 @@ public class Exchange {
     private HTTPMethod getRequestMethodFromSocket(IHTTPSocket socket) {
         if ("websocket".equalsIgnoreCase(socket.getRequestHeader("upgrade")))
             return HTTPMethod.WEBSOCKET;
-        if (router.isFormMethods() && (socket.getRequestMethod() == HTTPMethod.GET || socket.getRequestMethod() == HTTPMethod.POST) && getMimeType() == MimeType.X_WWW_FORM_URLENCODED) {
-            AbstractElement e = getBodyPathElement("_method");
+        if (router.getRoutingOptions().hasFormMethodParameter() && (socket.getRequestMethod() == HTTPMethod.GET || socket.getRequestMethod() == HTTPMethod.POST) && getMimeType() == MimeType.X_WWW_FORM_URLENCODED) {
+            AbstractElement e = getBodyPathElement(router.getRoutingOptions().getFormMethodParameter());
             if (e != null) {
                 try {
                     return HTTPMethod.valueOf(e.string());

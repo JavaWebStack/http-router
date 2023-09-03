@@ -2,6 +2,7 @@ package org.javawebstack.http.router.router;
 
 import org.javawebstack.http.router.Exchange;
 import org.javawebstack.http.router.HTTPMethod;
+import org.javawebstack.http.router.HTTPRoutingOptions;
 import org.javawebstack.http.router.handler.AfterRequestHandler;
 import org.javawebstack.http.router.handler.RequestHandler;
 import org.javawebstack.http.router.transformer.route.RouteParamTransformerProvider;
@@ -21,17 +22,19 @@ public class Route {
     private List<RequestHandler> handlers;
     private List<AfterRequestHandler> afterHandlers;
 
-    public Route(RouteParamTransformerProvider routeParamTransformerProvider, HTTPMethod method, String pattern, List<RequestHandler> handlers) {
-        this(routeParamTransformerProvider, method, pattern, ":", handlers);
+    public Route(RouteParamTransformerProvider routeParamTransformerProvider, HTTPMethod method, String pattern, HTTPRoutingOptions options, List<RequestHandler> handlers) {
+        this(routeParamTransformerProvider, method, pattern, options, ":", handlers);
     }
 
-    public Route(RouteParamTransformerProvider routeParamTransformerProvider, HTTPMethod method, String pattern, String variableDelimiter, List<RequestHandler> handlers) {
+    public Route(RouteParamTransformerProvider routeParamTransformerProvider, HTTPMethod method, String pattern, HTTPRoutingOptions options, String variableDelimiter, List<RequestHandler> handlers) {
         this.handlers = handlers;
         this.method = method;
         this.routeParamTransformerProvider = routeParamTransformerProvider;
         pattern = pattern.toLowerCase(Locale.ENGLISH);
-        if (pattern.endsWith("/"))
-            pattern = pattern.substring(0, pattern.length() - 1);
+        if(options.isIgnoreTrailingSlash()) {
+            if (pattern.endsWith("/"))
+                pattern = pattern.substring(0, pattern.length() - 1);
+        }
         if (!pattern.startsWith("/"))
             pattern = "/" + pattern;
         int pos = 0;
@@ -39,19 +42,20 @@ public class Route {
         StringBuilder text = new StringBuilder();
         boolean inVar = false;
         while (pos < pattern.length()) {
-            if (pattern.charAt(pos) == '{') {
+            char c = pattern.charAt(pos);
+            if (c == '{') {
                 if (inVar) {
                     throw new RuntimeException("Unexpected character '{' in route at position " + pos);
                 }
                 if (text.length() > 0) {
-                    sb.append("(" + regexEscape(text.toString()) + ")");
+                    sb.append("(" + prepareRegex(options, text.toString()) + ")");
                     text = new StringBuilder();
                 }
                 inVar = true;
                 pos++;
                 continue;
             }
-            if (pattern.charAt(pos) == '}') {
+            if (c == '}') {
                 if (!inVar) {
                     throw new RuntimeException("Unexpected character '}' in route at position " + pos);
                 }
@@ -74,14 +78,17 @@ public class Route {
                 pos++;
                 continue;
             }
-            text.append(pattern.charAt(pos));
+            text.append(c);
             pos++;
         }
         if (inVar) {
             throw new RuntimeException("Unexpected end in route");
         }
         if (text.length() > 0) {
-            sb.append("(" + regexEscape(text.toString()) + ")");
+            sb.append("(" + prepareRegex(options, text.toString()) + ")");
+        }
+        if(options.isIgnoreTrailingSlash()) {
+            sb.append("/?");
         }
         this.pattern = Pattern.compile(sb.toString());
     }
@@ -115,6 +122,28 @@ public class Route {
 
     public List<AfterRequestHandler> getAfterHandlers() {
         return afterHandlers;
+    }
+
+    private static String prepareRegex(HTTPRoutingOptions options, String text) {
+        text = regexEscape(text);
+        if(options.isCaseInsensitive())
+            text = ignoreCase(text);
+        return text;
+    }
+
+    private static String ignoreCase(String s) {
+        StringBuilder sb = new StringBuilder();
+        for(char c : s.toCharArray()) {
+            if(Character.isAlphabetic(c)) {
+                char inverted = Character.isUpperCase(c) ? Character.toLowerCase(c) : Character.toUpperCase(c);
+                if(c != inverted) {
+                    sb.append("[").append(c).append(inverted).append("]");
+                    continue;
+                }
+            }
+            sb.append(c);
+        }
+        return sb.toString();
     }
 
     private static String regexEscape(String s) {

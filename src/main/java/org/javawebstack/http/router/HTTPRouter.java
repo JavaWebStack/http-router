@@ -44,6 +44,7 @@ public class HTTPRouter implements RouteParamTransformerProvider {
     private final Map<String, AfterRequestHandler> afterMiddleware = new HashMap<>();
     private Function<Class<?>, Object> controllerInitiator = this::defaultControllerInitiator;
     private boolean formMethods = true;
+    private HTTPRoutingOptions routingOptions = new HTTPRoutingOptions();
     private PartContentCache multipartContentCache;
 
     public HTTPRouter(IHTTPSocketServer server) {
@@ -154,17 +155,17 @@ public class HTTPRouter implements RouteParamTransformerProvider {
     }
 
     public HTTPRouter route(HTTPMethod method, String pattern, RequestHandler... handlers) {
-        routes.add(new Route(this, method, pattern, Arrays.asList(handlers)));
+        routes.add(new Route(this, method, pattern, routingOptions, Arrays.asList(handlers)));
         return this;
     }
 
     public HTTPRouter beforeRoute(HTTPMethod method, String pattern, RequestHandler... handlers) {
-        beforeRoutes.add(new Route(this, method, pattern, Arrays.asList(handlers)));
+        beforeRoutes.add(new Route(this, method, pattern, routingOptions, Arrays.asList(handlers)));
         return this;
     }
 
     public HTTPRouter afterRoute(HTTPMethod method, String pattern, AfterRequestHandler... handlers) {
-        afterRoutes.add(new Route(this, method, pattern, null).setAfterHandlers(Arrays.asList(handlers)));
+        afterRoutes.add(new Route(this, method, pattern, routingOptions, null).setAfterHandlers(Arrays.asList(handlers)));
         return this;
     }
 
@@ -426,12 +427,26 @@ public class HTTPRouter implements RouteParamTransformerProvider {
         return this;
     }
 
-    public boolean isFormMethods() {
-        return formMethods;
+    public HTTPRouter caseInsensitiveRouting() {
+        return caseInsensitiveRouting(true);
     }
 
+    public HTTPRouter caseInsensitiveRouting(boolean caseInsensitiveRouting) {
+        routingOptions.caseInsensitive(caseInsensitiveRouting);
+        return this;
+    }
+
+    public HTTPRoutingOptions getRoutingOptions() {
+        return routingOptions;
+    }
+
+    @Deprecated
     public HTTPRouter disableFormMethods() {
-        formMethods = false;
+        return formMethodParameter(null);
+    }
+
+    public HTTPRouter formMethodParameter(String parameter) {
+        routingOptions.formMethodParameter(parameter);
         return this;
     }
 
