@@ -3,7 +3,6 @@ package org.javawebstack.httpserver;
 import org.javawebstack.abstractdata.AbstractMapper;
 import org.javawebstack.abstractdata.NamingPolicy;
 import org.javawebstack.httpserver.adapter.IHTTPSocketServer;
-import org.javawebstack.httpserver.adapter.undertow.UndertowHTTPSocketServer;
 import org.javawebstack.httpserver.handler.*;
 import org.javawebstack.httpserver.router.DefaultRouteAutoInjector;
 import org.javawebstack.httpserver.router.Route;
@@ -44,10 +43,6 @@ public class HTTPServer implements RouteParamTransformerProvider {
     private final Map<String, AfterRequestHandler> afterMiddleware = new HashMap<>();
     private Function<Class<?>, Object> controllerInitiator = this::defaultControllerInitiator;
     private boolean formMethods = true;
-
-    public HTTPServer() {
-        this(new UndertowHTTPSocketServer());
-    }
 
     public HTTPServer(IHTTPSocketServer server) {
         this.server = server;
@@ -424,4 +419,5 @@ public class HTTPServer implements RouteParamTransformerProvider {
         formMethods = false;
         return this;
     }
+
 }
