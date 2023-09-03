@@ -11,12 +11,12 @@
     </properties>
 
     <groupId>org.javawebstack</groupId>
-    <artifactId>http-server</artifactId>
+    <artifactId>http-router</artifactId>
     <version>${buildVersion}</version>
 
-    <name>http-server</name>
+    <name>http-router</name>
     <description>This library provides an http routing and request mapping stack</description>
-    <url>https://github.com/JavaWebStack/http-server</url>
+    <url>https://github.com/JavaWebStack/http-router</url>
 
     <licenses>
         <license>
@@ -41,9 +41,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/JavaWebStack/http-server.git</connection>
-        <developerConnection>scm:git:ssh://github.com:JavaWebStack/http-server.git</developerConnection>
-        <url>https://github.com/JavaWebStack/http-server/tree/master</url>
+        <connection>scm:git:git://github.com/JavaWebStack/http-router.git</connection>
+        <developerConnection>scm:git:ssh://github.com:JavaWebStack/http-router.git</developerConnection>
+        <url>https://github.com/JavaWebStack/http-router/tree/master</url>
     </scm>
 
     <dependencies>

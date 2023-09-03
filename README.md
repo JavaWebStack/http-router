@@ -3,11 +3,11 @@
 JWS HTTP Routing Library
 </p>
 
-![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/JavaWebStack/http-server/Maven%20Deploy/master)
-![GitHub](https://img.shields.io/github/license/JavaWebStack/http-server)
+![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/JavaWebStack/http-router/Maven%20Deploy/master)
+![GitHub](https://img.shields.io/github/license/JavaWebStack/http-router)
 ![Maven metadata URL](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Forg%2Fjavawebstack%2FHTTP-Server%2Fmaven-metadata.xml)
-![GitHub contributors](https://img.shields.io/github/contributors/JavaWebStack/http-server)
-![Lines of code](https://img.shields.io/tokei/lines/github/JavaWebStack/http-server)
+![GitHub contributors](https://img.shields.io/github/contributors/JavaWebStack/http-router)
+![Lines of code](https://img.shields.io/tokei/lines/github/JavaWebStack/http-router)
 ![Discord](https://img.shields.io/discord/815612319378833408?color=%237289DA&label=discord)
 ![Twitter Follow](https://img.shields.io/twitter/follow/JavaWebStack?style=social)
 
@@ -24,7 +24,7 @@ work-in-progress project though so it's not yet complete.
 ```xml
 <dependency>
     <groupId>org.javawebstack</groupId>
-    <artifactId>http-server</artifactId>
+    <artifactId>http-router</artifactId>
     <version>1.0.3</version>
 </dependency>
 ```
