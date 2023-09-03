@@ -15,7 +15,7 @@
     <version>${buildVersion}</version>
 
     <name>http-server</name>
-    <description>This library provides a routing and request mapping stack on top of the well known and industry proven eclipse jetty http server. It also supports websockets.</description>
+    <description>This library provides an http routing and request mapping stack</description>
     <url>https://github.com/JavaWebStack/http-server</url>
 
     <licenses>
@@ -56,17 +56,6 @@
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>0.10.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-api</artifactId>
-            <version>5.10.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.10.0</version>
-            <scope>test</scope>
         </dependency>
     </dependencies>
 

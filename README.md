@@ -13,7 +13,7 @@ JWS HTTP Routing Library
 
 ## Introduction
 
-This library provides a routing and request mapping stack on top of the well known and industry proven eclipse jetty http server. It also supports websockets.
+This library provides an http routing and request mapping stack
 
 ## Documentation
 
