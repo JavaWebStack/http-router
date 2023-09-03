@@ -4,6 +4,7 @@ import org.javawebstack.abstractdata.mapper.Mapper;
 import org.javawebstack.abstractdata.mapper.naming.NamingPolicy;
 import org.javawebstack.http.router.adapter.IHTTPSocketServer;
 import org.javawebstack.http.router.handler.*;
+import org.javawebstack.http.router.multipart.content.PartContentCache;
 import org.javawebstack.http.router.router.DefaultRouteAutoInjector;
 import org.javawebstack.http.router.router.Route;
 import org.javawebstack.http.router.router.RouteAutoInjector;
@@ -43,6 +44,7 @@ public class HTTPRouter implements RouteParamTransformerProvider {
     private final Map<String, AfterRequestHandler> afterMiddleware = new HashMap<>();
     private Function<Class<?>, Object> controllerInitiator = this::defaultControllerInitiator;
     private boolean formMethods = true;
+    private PartContentCache multipartContentCache;
 
     public HTTPRouter(IHTTPSocketServer server) {
         this.server = server;
@@ -300,78 +302,86 @@ public class HTTPRouter implements RouteParamTransformerProvider {
     public void execute(Exchange exchange) {
         Exchange.exchanges.set(exchange);
         try {
-            Object response = null;
             try {
-                for (RequestInterceptor ic : beforeInterceptors) {
-                    if (ic.intercept(exchange)) {
-                        exchange.close();
-                        Exchange.exchanges.remove();
-                        return;
-                    }
-                }
-                middlewares:
-                for (Route route : beforeRoutes) {
-                    Map<String, Object> pathVariables = route.match(exchange);
-                    if (pathVariables == null)
-                        continue;
-                    exchange.getPathVariables().putAll(pathVariables);
-                    for (RequestHandler handler : route.getHandlers()) {
-                        try {
-                            response = handler.handle(exchange);
-                        } catch (Throwable ex) {
-                            response = exceptionHandler.handle(exchange, ex);
+                if(multipartContentCache != null)
+                    exchange.enableMultipart(multipartContentCache);
+                Object response = null;
+                try {
+                    for (RequestInterceptor ic : beforeInterceptors) {
+                        if (ic.intercept(exchange)) {
+                            exchange.close();
+                            Exchange.exchanges.remove();
+                            return;
                         }
-                        if (response != null)
-                            break middlewares;
                     }
-                }
-                exchange.getPathVariables().clear();
-                if (response == null) {
-                    routes:
-                    for (Route route : routes) {
+                    middlewares:
+                    for (Route route : beforeRoutes) {
                         Map<String, Object> pathVariables = route.match(exchange);
                         if (pathVariables == null)
                             continue;
                         exchange.getPathVariables().putAll(pathVariables);
                         for (RequestHandler handler : route.getHandlers()) {
-                            response = handler.handle(exchange);
-                            if (exchange.getMethod() == HTTPMethod.WEBSOCKET) {
-                                Exchange.exchanges.remove();
-                                return;
+                            try {
+                                response = handler.handle(exchange);
+                            } catch (Throwable ex) {
+                                response = exceptionHandler.handle(exchange, ex);
                             }
                             if (response != null)
-                                break routes;
+                                break middlewares;
                         }
-                        exchange.getPathVariables().clear();
                     }
+                    exchange.getPathVariables().clear();
+                    if (response == null) {
+                        routes:
+                        for (Route route : routes) {
+                            Map<String, Object> pathVariables = route.match(exchange);
+                            if (pathVariables == null)
+                                continue;
+                            exchange.getPathVariables().putAll(pathVariables);
+                            for (RequestHandler handler : route.getHandlers()) {
+                                response = handler.handle(exchange);
+                                if (exchange.getMethod() == HTTPMethod.WEBSOCKET) {
+                                    Exchange.exchanges.remove();
+                                    return;
+                                }
+                                if (response != null)
+                                    break routes;
+                            }
+                            exchange.getPathVariables().clear();
+                        }
+                    }
+                } catch (Throwable ex) {
+                    response = exceptionHandler.handle(exchange, ex);
                 }
-            } catch (Throwable ex) {
-                response = exceptionHandler.handle(exchange, ex);
-            }
-            if (response == null)
-                response = notFoundHandler.handle(exchange);
-            exchange.getPathVariables().clear();
-            for (Route route : afterRoutes) {
-                Map<String, Object> pathVariables = route.match(exchange);
-                if (pathVariables == null)
-                    continue;
-                exchange.getPathVariables().putAll(pathVariables);
-                for (AfterRequestHandler handler : route.getAfterHandlers())
-                    response = handler.handleAfter(exchange, response);
+                if (response == null)
+                    response = notFoundHandler.handle(exchange);
                 exchange.getPathVariables().clear();
+                for (Route route : afterRoutes) {
+                    Map<String, Object> pathVariables = route.match(exchange);
+                    if (pathVariables == null)
+                        continue;
+                    exchange.getPathVariables().putAll(pathVariables);
+                    for (AfterRequestHandler handler : route.getAfterHandlers())
+                        response = handler.handleAfter(exchange, response);
+                    exchange.getPathVariables().clear();
+                }
+                if (response != null)
+                    exchange.write(transformResponse(exchange, response));
+                if (exchange.getMethod() != HTTPMethod.WEBSOCKET)
+                    exchange.close();
+                Exchange.exchanges.remove();
+                return;
+            } catch (Throwable ex) {
+                try {
+                    exchange.write(transformResponse(exchange, exceptionHandler.handle(exchange, ex)));
+                } catch (Throwable ex2) {
+                    exchange.status(500);
+                    logger.log(Level.SEVERE, ex2, () -> "An error occured in the exception handler!");
+                }
             }
-            if (response != null)
-                exchange.write(transformResponse(exchange, response));
-            if (exchange.getMethod() != HTTPMethod.WEBSOCKET)
-                exchange.close();
-            Exchange.exchanges.remove();
-            return;
-        } catch (Throwable ex) {
-            try {
-                exchange.write(transformResponse(exchange, exceptionHandler.handle(exchange, ex)));
-            } catch (Throwable ex2) {
-                logger.log(Level.SEVERE, ex2, () -> "An error occured in the exception handler!");
-            }
+        } catch (Exception ex) {
+            // This should never be reached, just added this as a precaution
+            logger.log(Level.SEVERE, ex, () -> "An unexpected error occured in the exception handling of the exception handler (probably while setting the status)");
         }
         Exchange.exchanges.remove();
         exchange.close();
@@ -409,6 +419,11 @@ public class HTTPRouter implements RouteParamTransformerProvider {
 
     public ExceptionHandler getExceptionHandler() {
         return exceptionHandler;
+    }
+
+    public HTTPRouter enableMultipart(PartContentCache cache) {
+        this.multipartContentCache = cache;
+        return this;
     }
 
     public boolean isFormMethods() {

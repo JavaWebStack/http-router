@@ -3,15 +3,18 @@ package org.javawebstack.http.router;
 import org.javawebstack.abstractdata.*;
 import org.javawebstack.abstractdata.mapper.Mapper;
 import org.javawebstack.http.router.adapter.IHTTPSocket;
+import org.javawebstack.http.router.multipart.Part;
+import org.javawebstack.http.router.multipart.content.InMemoryCache;
+import org.javawebstack.http.router.multipart.content.PartContentCache;
+import org.javawebstack.http.router.multipart.content.TmpFolderCache;
+import org.javawebstack.http.router.util.HeaderValue;
 import org.javawebstack.http.router.util.MimeType;
 import org.javawebstack.validator.ValidationContext;
 import org.javawebstack.validator.ValidationException;
 import org.javawebstack.validator.ValidationResult;
 import org.javawebstack.validator.Validator;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -32,6 +35,7 @@ public class Exchange {
     private final AbstractObject queryParameters;
     private final IHTTPSocket socket;
     private final Map<String, Object> attributes = new HashMap<>();
+    private List<Part> parts = null;
 
     public Exchange(HTTPRouter router, IHTTPSocket socket) {
         this.router = router;
@@ -301,12 +305,64 @@ public class Exchange {
         return socket.getRequestMethod();
     }
 
-    public MimeType getMimeType() {
-        String contentType = getContentType().toLowerCase();
-        if (contentType.contains(";")) {
-            contentType = contentType.split(";")[0].trim();
-        }
-
-        return MimeType.byMimeType(contentType);
+    /**
+     * Use with CAUTION! This will load all parts into memory
+     * @return
+     */
+    public Exchange enableMultipart() {
+        return enableMultipart(new InMemoryCache());
     }
+
+    /**
+     * Use with CAUTION! This will run an expensive cleanup routine on each call and store files on disk
+     * @param tmpFolder
+     * @return
+     */
+    public Exchange enableMultipart(File tmpFolder) {
+        PartContentCache cache = new TmpFolderCache(tmpFolder);
+        cache.cleanup();
+        return enableMultipart(cache);
+    }
+
+    public Exchange enableMultipart(PartContentCache cache) {
+        if(parts != null)
+            return this;
+        HeaderValue contentType = new HeaderValue(getContentType());
+        if(!contentType.getValue().toLowerCase(Locale.ROOT).equals("multipart/form-data"))
+            return this;
+        body = new byte[0];
+        byte[] boundary = contentType.getDirectives().get("boundary").getBytes();
+        try {
+            InputStream stream;
+            if(body != null) {
+                stream = new ByteArrayInputStream(body);
+            } else {
+                stream = socket.getInputStream();
+            }
+            parts = Part.parse(stream, boundary, cache);
+        } catch (Exception ex) {
+            parts = new ArrayList<>();
+        }
+        return this;
+    }
+
+    public boolean isMultipart() {
+        return parts != null;
+    }
+
+    public List<Part> getParts() {
+        if(!isMultipart())
+            throw new IllegalStateException("This is not a multipart request or multipart parsing is not enabled. Use enableMultipart to enable it or check with isMultipart");
+        return parts;
+    }
+
+    public Part getPart(String name) {
+        return getParts().stream().filter(p -> name.equals(p.getName())).findFirst().orElse(null);
+    }
+
+    public MimeType getMimeType() {
+        HeaderValue contentType = new HeaderValue(getContentType());
+        return MimeType.byMimeType(contentType.getValue().toLowerCase(Locale.ROOT));
+    }
+
 }
