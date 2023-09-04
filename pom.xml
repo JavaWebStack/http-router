@@ -50,7 +50,12 @@
         <dependency>
             <groupId>org.javawebstack</groupId>
             <artifactId>validator</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.javawebstack</groupId>
+            <artifactId>abstract-data</artifactId>
+            <version>1.0.6</version>
         </dependency>
         <dependency>
             <groupId>org.reflections</groupId>
