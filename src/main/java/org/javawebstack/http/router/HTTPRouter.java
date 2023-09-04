@@ -155,7 +155,11 @@ public class HTTPRouter implements RouteParamTransformerProvider {
     }
 
     public HTTPRouter route(HTTPMethod method, String pattern, RequestHandler... handlers) {
-        routes.add(new Route(this, method, pattern, routingOptions, Arrays.asList(handlers)));
+        return route(null, method, pattern, handlers);
+    }
+
+    public HTTPRouter route(String name, HTTPMethod method, String pattern, RequestHandler... handlers) {
+        routes.add(new Route(this, method, pattern, routingOptions, Arrays.asList(handlers)).setName(name));
         return this;
     }
 
@@ -185,6 +189,18 @@ public class HTTPRouter implements RouteParamTransformerProvider {
         for (HTTPMethod method : methods)
             afterRoute(method, pattern, handlers);
         return this;
+    }
+
+    public List<Route> getBeforeRoutes() {
+        return beforeRoutes;
+    }
+
+    public List<Route> getRoutes() {
+        return routes;
+    }
+
+    public List<Route> getAfterRoutes() {
+        return afterRoutes;
     }
 
     public HTTPRouter any(String pattern, RequestHandler... handlers) {

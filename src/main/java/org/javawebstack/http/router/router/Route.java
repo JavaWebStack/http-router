@@ -15,9 +15,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Route {
+
+    private String name;
     private final RouteParamTransformerProvider routeParamTransformerProvider;
     private final HTTPMethod method;
-    private final Pattern pattern;
+    private final String pattern;
+    private final Pattern compiledPattern;
     private final Map<String, String> variables = new HashMap<>();
     private List<RequestHandler> handlers;
     private List<AfterRequestHandler> afterHandlers;
@@ -30,6 +33,7 @@ public class Route {
         this.handlers = handlers;
         this.method = method;
         this.routeParamTransformerProvider = routeParamTransformerProvider;
+        this.pattern = pattern;
         pattern = pattern.toLowerCase(Locale.ENGLISH);
         if(options.isIgnoreTrailingSlash()) {
             if (pattern.endsWith("/"))
@@ -90,12 +94,29 @@ public class Route {
         if(options.isIgnoreTrailingSlash()) {
             sb.append("/?");
         }
-        this.pattern = Pattern.compile(sb.toString());
+        this.compiledPattern = Pattern.compile(sb.toString());
+    }
+
+    public Route setName(String name) {
+        this.name = name;
+        return this;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Route setAfterHandlers(List<AfterRequestHandler> afterHandlers) {
         this.afterHandlers = afterHandlers;
         return this;
+    }
+
+    public String getPattern() {
+        return pattern;
+    }
+
+    public Map<String, String> getVariables() {
+        return variables;
     }
 
     public Map<String, Object> match(Exchange exchange) {
@@ -105,7 +126,7 @@ public class Route {
     public Map<String, Object> match(Exchange exchange, HTTPMethod method, String path) {
         if (this.method != method)
             return null;
-        Matcher matcher = pattern.matcher(path);
+        Matcher matcher = compiledPattern.matcher(path);
         if (matcher.matches()) {
             Map<String, Object> params = new HashMap<>();
             for (String name : variables.keySet()) {
