@@ -2,6 +2,7 @@ package org.javawebstack.http.router;
 
 import org.javawebstack.abstractdata.mapper.Mapper;
 import org.javawebstack.abstractdata.mapper.naming.NamingPolicy;
+import org.javawebstack.commons.inject.Injector;
 import org.javawebstack.http.router.adapter.IHTTPSocketServer;
 import org.javawebstack.http.router.handler.*;
 import org.javawebstack.http.router.multipart.content.PartContentCache;
@@ -21,7 +22,6 @@ import org.reflections.Reflections;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -42,9 +42,8 @@ public class HTTPRouter implements RouteParamTransformerProvider {
     private final List<RouteAutoInjector> routeAutoInjectors = new ArrayList<>();
     private final Map<String, RequestHandler> beforeMiddleware = new HashMap<>();
     private final Map<String, AfterRequestHandler> afterMiddleware = new HashMap<>();
-    private Function<Class<?>, Object> controllerInitiator = this::defaultControllerInitiator;
-    private boolean formMethods = true;
-    private HTTPRoutingOptions routingOptions = new HTTPRoutingOptions();
+    private Injector injector;
+    private final HTTPRoutingOptions routingOptions = new HTTPRoutingOptions();
     private PartContentCache multipartContentCache;
 
     public HTTPRouter(IHTTPSocketServer server) {
@@ -77,11 +76,15 @@ public class HTTPRouter implements RouteParamTransformerProvider {
     }
 
     public HTTPRouter beforeInterceptor(RequestInterceptor handler) {
+        if(injector != null)
+            injector.inject(handler);
         beforeInterceptors.add(handler);
         return this;
     }
 
     public HTTPRouter routeAutoInjector(RouteAutoInjector injector) {
+        if(this.injector != null)
+            this.injector.inject(injector);
         routeAutoInjectors.add(injector);
         return this;
     }
@@ -143,6 +146,8 @@ public class HTTPRouter implements RouteParamTransformerProvider {
     }
 
     public HTTPRouter staticHandler(String pathPrefix, StaticFileHandler handler) {
+        if(injector != null)
+            injector.inject(handler);
         return get(pathPrefix + (pathPrefix.endsWith("/") ? "" : "/") + "{*:path}", handler);
     }
 
@@ -159,16 +164,31 @@ public class HTTPRouter implements RouteParamTransformerProvider {
     }
 
     public HTTPRouter route(String name, HTTPMethod method, String pattern, RequestHandler... handlers) {
+        if(injector != null) {
+            for(RequestHandler handler : handlers) {
+                injector.inject(handler);
+            }
+        }
         routes.add(new Route(this, method, pattern, routingOptions, Arrays.asList(handlers)).setName(name));
         return this;
     }
 
     public HTTPRouter beforeRoute(HTTPMethod method, String pattern, RequestHandler... handlers) {
+        if(injector != null) {
+            for(RequestHandler handler : handlers) {
+                injector.inject(handler);
+            }
+        }
         beforeRoutes.add(new Route(this, method, pattern, routingOptions, Arrays.asList(handlers)));
         return this;
     }
 
     public HTTPRouter afterRoute(HTTPMethod method, String pattern, AfterRequestHandler... handlers) {
+        if(injector != null) {
+            for(AfterRequestHandler handler : handlers) {
+                injector.inject(handler);
+            }
+        }
         afterRoutes.add(new Route(this, method, pattern, routingOptions, null).setAfterHandlers(Arrays.asList(handlers)));
         return this;
     }
@@ -216,54 +236,62 @@ public class HTTPRouter implements RouteParamTransformerProvider {
     }
 
     public HTTPRouter webSocket(String pattern, WebSocketHandler handler) {
+        if(injector != null)
+            injector.inject(handler);
         if(!server.isWebSocketSupported())
             throw new UnsupportedOperationException(server.getClass().getName() + " does not support websockets!");
         return route(HTTPMethod.WEBSOCKET, pattern, new InternalWebSocketRequestHandler(handler));
     }
 
     public HTTPRouter middleware(String name, RequestHandler handler) {
+        if(injector != null)
+            injector.inject(handler);
         beforeMiddleware.put(name, handler);
         return this;
     }
 
     public HTTPRouter middleware(String name, AfterRequestHandler handler) {
+        if(injector != null)
+            injector.inject(handler);
         afterMiddleware.put(name, handler);
         return this;
     }
 
     public HTTPRouter notFound(RequestHandler handler) {
+        if(injector != null)
+            injector.inject(handler);
         notFoundHandler = handler;
         return this;
     }
 
     public HTTPRouter routeParamTransformer(RouteParamTransformer transformer) {
+        if(injector != null)
+            injector.inject(transformer);
         routeParamTransformers.add(transformer);
         return this;
     }
 
     public HTTPRouter responseTransformer(ResponseTransformer transformer) {
+        if(injector != null)
+            injector.inject(transformer);
         responseTransformers.add(transformer);
         return this;
     }
 
     public HTTPRouter exceptionHandler(ExceptionHandler handler) {
+        if(injector != null)
+            injector.inject(handler);
         exceptionHandler = handler;
         return this;
     }
 
-    private Object defaultControllerInitiator (Class<?> clazz) {
-        try {
-            return clazz.newInstance();
-        } catch (InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-
-        return null;
+    public HTTPRouter injector(Injector injector) {
+        this.injector = injector;
+        return this;
     }
 
-    public HTTPRouter controllerInitiator (Function<Class<?>, Object> initiator) {
-        controllerInitiator = initiator;
-        return this;
+    public Injector getInjector() {
+        return injector;
     }
 
     public HTTPRouter controller(Class<?> parentClass, Package p) {
@@ -274,7 +302,17 @@ public class HTTPRouter implements RouteParamTransformerProvider {
         Reflections reflections = new Reflections(p.getName());
         reflections.getSubTypesOf(parentClass)
                 .stream()
-                .map(controllerInitiator)
+                .map(t -> {
+                    if(injector == null) {
+                        try {
+                            return t.newInstance();
+                        } catch (InstantiationException | IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
+                    } else {
+                        return injector.getInstance(t);
+                    }
+                })
                 .forEach(c -> controller(globalPrefix, c));
         return this;
     }
@@ -284,6 +322,8 @@ public class HTTPRouter implements RouteParamTransformerProvider {
     }
 
     public HTTPRouter controller(String globalPrefix, Object controller) {
+        if(injector != null)
+            injector.inject(controller);
         routeBinder.bind(globalPrefix, controller);
         return this;
     }
