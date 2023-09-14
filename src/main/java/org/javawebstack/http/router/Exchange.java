@@ -330,13 +330,13 @@ public class Exchange {
         HeaderValue contentType = new HeaderValue(getContentType());
         if(!contentType.getValue().toLowerCase(Locale.ROOT).equals("multipart/form-data"))
             return this;
-        body = new byte[0];
         byte[] boundary = contentType.getDirectives().get("boundary").getBytes();
         try {
             InputStream stream;
             if(body != null) {
                 stream = new ByteArrayInputStream(body);
             } else {
+                body = new byte[0];
                 stream = socket.getInputStream();
             }
             parts = Part.parse(stream, boundary, cache);
