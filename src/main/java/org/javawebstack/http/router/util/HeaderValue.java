@@ -5,8 +5,8 @@ import java.util.Map;
 
 public class HeaderValue {
 
-    final String value;
-    final Map<String, String> directives = new HashMap<>();
+    private final String value;
+    private final Map<String, String> directives = new HashMap<>();
 
     public HeaderValue(String source) {
         String[] spl = source.split("; ");

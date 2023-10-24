@@ -57,6 +57,10 @@ public enum MimeType {
     }
 
     public static MimeType byMimeType(String mimeType) {
+        if(mimeType == null)
+            return null;
+        if(mimeType.contains(";"))
+            mimeType = new HeaderValue(mimeType).getValue();
         for (MimeType type : values()) {
             if (type.mimeTypes.contains(mimeType)) {
                 return type;
