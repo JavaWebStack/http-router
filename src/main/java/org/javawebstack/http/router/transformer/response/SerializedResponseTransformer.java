@@ -44,11 +44,6 @@ public class SerializedResponseTransformer implements ResponseTransformer {
                         return this.mapper.map(object).toYaml();
                     case "application/x-www-form-urlencoded":
                         return this.mapper.map(object).toFormDataString();
-                    case "application/json":
-                        return this.mapper.map(object).toJsonString();
-                    default:
-                        exchange.status(406);
-                        return "Not Acceptable";
                 }
             }
 
