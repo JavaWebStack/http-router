@@ -35,16 +35,20 @@ public class SerializedResponseTransformer implements ResponseTransformer {
             if (rawAccept != null) {
                 HeaderValue accept = new HeaderValue(rawAccept);
 
+                exchange.contentType(rawAccept);
                 switch (accept.getValue().toLowerCase()) {
                     case "application/x-yaml":
                     case "application/yaml":
                     case "text/yaml":
                     case "text/x-yaml":
-                        exchange.contentType(rawAccept);
                         return this.mapper.map(object).toYaml();
                     case "application/x-www-form-urlencoded":
-                        exchange.contentType(rawAccept);
                         return this.mapper.map(object).toFormDataString();
+                    case "application/json":
+                        return this.mapper.map(object).toJsonString();
+                    default:
+                        exchange.status(406);
+                        return "Not Acceptable";
                 }
             }
 
