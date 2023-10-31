@@ -3,6 +3,7 @@ package org.javawebstack.http.router.transformer.response;
 import org.javawebstack.abstractdata.mapper.Mapper;
 import org.javawebstack.abstractdata.mapper.naming.NamingPolicy;
 import org.javawebstack.http.router.Exchange;
+import org.javawebstack.http.router.util.HeaderValue;
 
 public class SerializedResponseTransformer implements ResponseTransformer {
 
@@ -29,18 +30,20 @@ public class SerializedResponseTransformer implements ResponseTransformer {
         } else {
             if (this.ignoreStrings && object instanceof String)
                 return null;
-            String accept = exchange.header("Accept");
+            String rawAccept = exchange.header("Accept");
 
-            if (accept != null) {
-                switch (accept.toLowerCase()) {
+            if (rawAccept != null) {
+                HeaderValue accept = new HeaderValue(rawAccept);
+
+                switch (accept.getValue().toLowerCase()) {
                     case "application/x-yaml":
                     case "application/yaml":
                     case "text/yaml":
                     case "text/x-yaml":
-                        exchange.contentType(accept);
+                        exchange.contentType(rawAccept);
                         return this.mapper.map(object).toYaml();
                     case "application/x-www-form-urlencoded":
-                        exchange.contentType(accept);
+                        exchange.contentType(rawAccept);
                         return this.mapper.map(object).toFormDataString();
                 }
             }
