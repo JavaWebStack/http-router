@@ -21,7 +21,6 @@ jobs:
       - name: Deploy to JavaWebStack Repository
         run: mvn deploy -s build/settings.xml
         env:
-          DEPLOYMENT_USERNAME: ${{ secrets.DEPLOYMENT_USERNAME }}
-          DEPLOYMENT_PASSWORD: ${{ secrets.DEPLOYMENT_PASSWORD }}
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
