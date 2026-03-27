@@ -3,6 +3,7 @@ package org.javawebstack.http.router;
 import org.javawebstack.abstractdata.*;
 import org.javawebstack.abstractdata.mapper.Mapper;
 import org.javawebstack.http.router.adapter.IHTTPSocket;
+import org.javawebstack.http.router.handler.RequestHandler;
 import org.javawebstack.http.router.multipart.Part;
 import org.javawebstack.http.router.multipart.content.InMemoryCache;
 import org.javawebstack.http.router.multipart.content.PartContentCache;
@@ -15,6 +16,7 @@ import org.javawebstack.validator.ValidationResult;
 import org.javawebstack.validator.Validator;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -36,6 +38,7 @@ public class Exchange {
     private final IHTTPSocket socket;
     private final Map<String, Object> attributes = new HashMap<>();
     private List<Part> parts = null;
+    private RequestHandler finalHandler;
 
     public Exchange(HTTPRouter router, IHTTPSocket socket) {
         this.router = router;
@@ -365,4 +368,12 @@ public class Exchange {
         return MimeType.byMimeType(contentType.getValue().toLowerCase(Locale.ROOT));
     }
 
+    protected Exchange setFinalHandler(RequestHandler finalHandler) {
+        this.finalHandler = finalHandler;
+        return this;
+    }
+
+    public RequestHandler getFinalHandler() {
+        return finalHandler;
+    }
 }

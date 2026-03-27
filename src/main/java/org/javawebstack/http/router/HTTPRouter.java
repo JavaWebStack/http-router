@@ -396,6 +396,7 @@ public class HTTPRouter implements RouteParamTransformerProvider {
                                 continue;
                             exchange.getPathVariables().putAll(pathVariables);
                             for (RequestHandler handler : route.getHandlers()) {
+                                exchange.setFinalHandler(handler);
                                 response = handler.handle(exchange);
                                 if (exchange.getMethod() == HTTPMethod.WEBSOCKET) {
                                     Exchange.exchanges.remove();
